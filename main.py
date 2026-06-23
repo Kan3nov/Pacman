@@ -29,28 +29,27 @@ def start_screen(params: dict):
     title_font = params["title_font"]
 
     while True:
-        btn_Xstart = int(x_size * 0.4)
-        btn_Ystart = int(y_size * 0.6)
+        btn_Xstart = int(x_size * 0.45)
+        btn_Ystart = int(y_size * 0.4)
         screen.fill((0, 0, 0))
         mouse = pygame.mouse.get_pos()
 
         #screen.fill("#003049")
 
-        play_button = pygame.Rect(btn_Xstart - 25, btn_Ystart, 230, 50)
-        score_button = pygame.Rect(btn_Xstart - 25, btn_Ystart + 60, 230, 50)
-        cont_button = pygame.Rect(btn_Xstart - 25, btn_Ystart + 120, 230, 50)
+        play_button = pygame.Rect(btn_Xstart, btn_Ystart, 300, 75)
+        score_button = pygame.Rect(btn_Xstart, btn_Ystart + 120, 300, 75)
+        cont_button = pygame.Rect(btn_Xstart, btn_Ystart + 240, 300, 75)
         pac_image = pygame.image.load("resources/Pacman_HD.png").convert_alpha()
         red_ghost = pygame.image.load("resources/redgb.png").convert_alpha()
         blue_ghost = pygame.image.load("resources/bluegb.jpeg").convert_alpha()
 
-        resized_redG = pygame.transform.scale(red_ghost, (60, 60))
-        resized_blueG = pygame.transform.scale(blue_ghost, (60, 60))
-        resized_pac = pygame.transform.scale(pac_image, (85, 85))
+        resized_redG = pygame.transform.scale(red_ghost, (175, 175))
+        resized_blueG = pygame.transform.scale(blue_ghost, (175, 175))
+        resized_pac = pygame.transform.scale(pac_image, (200, 200))
         #pygame.Surface.set_colorkey(resized_redG, [0, 0, 0])
         #pygame.Surface.set_colorkey(resized_blueG, [0, 0, 0])
         #pygame.Surface.set_colorkey(resized_pac, [0, 0, 0])
 
-        
         pygame.draw.rect(
             screen,
             unpressed_btn if play_button.collidepoint(mouse) else pressed_btn,
@@ -72,19 +71,19 @@ def start_screen(params: dict):
         score_text = btnfont.render("Score board", True, white_col)
         cont_text = btnfont.render("Controls", True, white_col)
 
-        screen.blit(play_text, (btn_Xstart + 10, btn_Ystart + 10))
-        screen.blit(score_text, (btn_Xstart + 10, btn_Ystart + 10 + 60))
-        screen.blit(cont_text, (btn_Xstart + 30, btn_Ystart + 10 + 120))
+        screen.blit(play_text, (btn_Xstart + 30, btn_Ystart + 35))
+        screen.blit(score_text, (btn_Xstart + 30, btn_Ystart + 150))
+        screen.blit(cont_text, (btn_Xstart + 50, btn_Ystart + 265))
 
-        start = 50
+        start = 500
         screen.blit(resized_pac, (start, 50))
-        start += 87
+        start += 201
         screen.blit(title_1, (start, 50))
         start += tit1_h + 2
         screen.blit(resized_redG, (start, 50))
-        start += 62
+        start += 176
         screen.blit(resized_blueG, (start, 50))
-        start += 62
+        start += 176
         screen.blit(title_2, (start, 50))
 
         for event in pygame.event.get():
@@ -103,8 +102,8 @@ def start_screen(params: dict):
 
 def main_screen():
     pygame.init()
-    x_size = 1028
-    y_size = 1028
+    x_size = 1920
+    y_size = 1080
     screen = pygame.display.set_mode((x_size, y_size))
     pygame.display.set_caption("Start Menu Example")
     pygame.Color("#003049")
@@ -112,8 +111,8 @@ def main_screen():
     pressed_btn = (253, 216, 53)
     unpressed_btn = (251, 192, 45)
     white_col = (255, 255, 255)
-    btnfont = pygame.font.SysFont("Corbel", 40)
-    title_font = pygame.font.SysFont("Corbel", 70)
+    btnfont = pygame.font.SysFont("Corbel", 60)
+    title_font = pygame.font.SysFont("Corbel", 200)
     params = {
         "x_size": x_size,
         "y_size": y_size,
