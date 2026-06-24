@@ -7,9 +7,9 @@ clean:
 
 install:
 	@pip install mazegenerator-00001-py3-none-any.whl
-	#@pip install mazegen-1.0.0-py3-none-any.whl
 	@pip install flake8
 	@pip install mypy
+	@pip install pygame
 
 run:
 	@python3 $(SCRIPT)

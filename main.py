@@ -1,6 +1,6 @@
 import pygame
 import sys
-
+from mazegenerator.mazegenerator import MazeGenerator
 
 
 #def game():
@@ -17,6 +17,16 @@ import sys
 #
 #        pygame.display.update()
 #
+
+def dec_to_bin(dec: int, digs: int) -> str:
+    res = ""
+    while digs > 0:
+        res = str(dec & 1) + res
+        dec >>= 1
+        digs -= 1
+    return res
+
+
 def start_screen(params: dict):
 
     x_size = params["x_size"]
@@ -34,18 +44,23 @@ def start_screen(params: dict):
         screen.fill((0, 0, 0))
         mouse = pygame.mouse.get_pos()
 
-        #screen.fill("#003049")
-
+        # screen.fill("#003049")
         play_button = pygame.Rect(btn_Xstart, btn_Ystart, 300, 75)
         score_button = pygame.Rect(btn_Xstart, btn_Ystart + 120, 300, 75)
         cont_button = pygame.Rect(btn_Xstart, btn_Ystart + 240, 300, 75)
+
         pac_image = pygame.image.load("resources/Pacman_HD.png").convert_alpha()
         red_ghost = pygame.image.load("resources/redgb.png").convert_alpha()
         blue_ghost = pygame.image.load("resources/bluegb.jpeg").convert_alpha()
+        pacman_surf = pygame.image.load("pacman-art/pacman-right/1.png").convert_alpha()
+        # pacman_surf = pygame.transform.rotozoom(pacman_surf, 0, 2)
+        pacman_rect = pacman_surf.get_rect(center=(0, 0))
+
 
         resized_redG = pygame.transform.scale(red_ghost, (175, 175))
         resized_blueG = pygame.transform.scale(blue_ghost, (175, 175))
         resized_pac = pygame.transform.scale(pac_image, (200, 200))
+
         #pygame.Surface.set_colorkey(resized_redG, [0, 0, 0])
         #pygame.Surface.set_colorkey(resized_blueG, [0, 0, 0])
         #pygame.Surface.set_colorkey(resized_pac, [0, 0, 0])
@@ -86,16 +101,52 @@ def start_screen(params: dict):
         start += 176
         screen.blit(title_2, (start, 50))
 
-        for event in pygame.event.get():
+        screen.fill("#003049")
+        grid = params["grid"]
+        anchor = (600, 150)
+        tile = 32
+        y = 0
+        for row in grid:
+            x = 0
+            for cell in row:
+                if cell[3] == "1": # North
+                    pygame.draw.aaline(screen,
+                                    "white",
+                                    (anchor[0] + x * tile, anchor[1] + y * tile),
+                                    (anchor[0] + x * tile + tile, anchor[1] + y * tile)
+                    )
+                if cell[2] == "1": # East
+                    pygame.draw.aaline(screen,
+                                    "white",
+                                    (anchor[0] + x * tile + tile, anchor[1] + y * tile),
+                                    (anchor[0] + x * tile + tile, anchor[1] + y * tile + tile)
+                    )
+                if cell[1] == "1": # South
+                    pygame.draw.aaline(screen,
+                                    "white",
+                                    (anchor[0] + x * tile, anchor[1] + y * tile + tile),
+                                    (anchor[0] + x * tile + tile, anchor[1] + y * tile + tile)
+                    )
+                if cell[0] == "1": # West
+                    pygame.draw.aaline(screen,
+                                    "white",
+                                    (anchor[0] + x * tile, anchor[1] + y * tile),
+                                    (anchor[0] + x * tile, anchor[1] + y * tile + tile)
+                    )
+                x += 1
+            y += 1
+        pacman_rect.topleft = (anchor[0] + 8, anchor[1] + 8)
+        screen.blit(pacman_surf, pacman_rect)
 
+
+        for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-
-            #if event.type == pygame.MOUSEBUTTONDOWN:
-
-                #if play_button.collidepoint(mouse):
-                #    game()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_4:
+                    pygame.quit()
+                    sys.exit()
 
         pygame.display.flip()
 
@@ -107,12 +158,15 @@ def main_screen():
     screen = pygame.display.set_mode((x_size, y_size))
     pygame.display.set_caption("Start Menu Example")
     pygame.Color("#003049")
+    maze = MazeGenerator()
+    maze.generate()
+    grid = [[dec_to_bin(y, 4) for y in x] for x in maze.maze]
 
     pressed_btn = (253, 216, 53)
     unpressed_btn = (251, 192, 45)
     white_col = (255, 255, 255)
-    btnfont = pygame.font.SysFont("Corbel", 60)
-    title_font = pygame.font.SysFont("Corbel", 200)
+    btnfont = pygame.font.SysFont(None, 60)
+    title_font = pygame.font.SysFont(None, 200)
     params = {
         "x_size": x_size,
         "y_size": y_size,
@@ -121,7 +175,8 @@ def main_screen():
         "title_font": title_font,
         "pressed_btn": pressed_btn,
         "unpressed_btn": unpressed_btn,
-        "white_col": white_col
+        "white_col": white_col,
+        "grid": grid
     }
     start_screen(params)
 
