@@ -35,7 +35,7 @@ class Jsonparser:
     def defaults_filled(json_dict: dict):
         defualts = {
             "highscore_filename": "score_board.json",
-            "levels&size": [["1", (50, 50)], ["2", (50, 50)], ["3", (50, 50)],
+            "levels&size": [["1", (20, 20)], ["2", (50, 50)], ["3", (50, 50)],
                             ["4", (50, 50)], ["5", (50, 50)], ["6", (50, 50)],
                             ["7", (50, 50)], ["8", (50, 50)], ["9", (50, 50)],
                             ["10", (50, 50)]],

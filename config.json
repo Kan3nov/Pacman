@@ -1,11 +1,11 @@
 {
   "highscore_filename": "",
-  #"levels&size": [
+  "levels&size": [
     [
-      "1",
+      "l",
       [
-        50,
-        50
+        20,
+        20
       ]
     ],
     [
