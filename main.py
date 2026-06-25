@@ -3,6 +3,7 @@ import sys
 from enum import Enum
 from mazegenerator.mazegenerator import MazeGenerator
 from parser import Jsonparser
+import random
 
 
 class Dir(Enum):
@@ -127,26 +128,75 @@ class Game:
         start += 176
         self.screen.blit(title_2, (start, 50))
 
+    def ghost_dir(self, grid: list[list], anchor: tuple,
+                  ghost_rect: list[pygame.Rect]) -> list[tuple[int, int]]:
+        
+        speeds = []
+        for ghost in ghost_rect:
+            x_cell = (ghost.x - anchor[0]) // 32
+            y_cell = (ghost.y - anchor[1]) // 32
+            cell = grid[y_cell][x_cell]
+            open_paths = []
+            if cell[0] == "0":
+                open_paths.append(Dir.LEFT)
+            if cell[1] == "0":
+                open_paths.append(Dir.DOWN)
+            if cell[2] == "0":
+                open_paths.append(Dir.RIGHT)
+            if cell[3] == "0":
+                open_paths.append(Dir.UP)
+            next_path = random.choice(open_paths)
+            if next_path == Dir.UP:
+                speeds.append((0, -1))
+            elif next_path == Dir.DOWN:
+                speeds.append((0, 1))
+            elif next_path == Dir.RIGHT:
+                speeds.append((1, 0))
+            elif next_path == Dir.LEFT:
+                speeds.append((-1, 0))
+        return speeds
+
+    def ghost(self, ghost_rect: list[pygame.Rect],
+              ghost_surf: list[pygame.Surface],
+              speeds: list[tuple[int, int]]) -> None:
+        for index, ghost in enumerate(ghost_rect):
+            speed = speeds[index]
+            x_speed, y_speed = speed
+            ghost.topleft = (ghost.x + x_speed, ghost.y + y_speed)
+            self.screen.blit(ghost_surf[index], ghost)
+
     def pacman(self):
 
         maze = MazeGenerator()
         maze.generate()
         grid = [[dec_to_bin(y, 4) for y in x] for x in maze.maze]
-        print(grid)
 
         x_spd = 0
         y_spd = 0
         x_pac = 8
         y_pac = 8
         pac_state = 0
+        ghost_c = 0
         pac_dir_img = None
         pac_dir = Dir.RIGHT
+        speeds = []
 
         x = (1960 - maze._width * 32) // 2
         y = (1080 - maze._height * 32) // 2
         anchor = (x, y)
         spawn = (x + 32 * 7, y + 32 * 6)
         mov_dir = None
+
+        ghst_1surf = pygame.image.load(f"pacman-art/ghosts/blinky.png").convert_alpha()
+        ghst_2surf = pygame.image.load(f"pacman-art/ghosts/clyde.png").convert_alpha()
+        ghst_3surf = pygame.image.load(f"pacman-art/ghosts/inky.png").convert_alpha()
+        ghst_4surf = pygame.image.load(f"pacman-art/ghosts/pinky.png").convert_alpha()
+        ghst_1rect = ghst_1surf.get_rect(topleft=(anchor[0] + 8, anchor[1] + 8))
+        ghst_2rect = ghst_2surf.get_rect(topleft=(anchor[0] + (32 * (maze._width - 1)) + 8, anchor[1] + 8))
+        ghst_3rect = ghst_3surf.get_rect(topleft=(anchor[0] + 8, anchor[1] +  32 * (maze._height - 1) + 8))
+        ghst_4rect = ghst_4surf.get_rect(topleft=(anchor[0] + (32 * (maze._width - 1)) + 8, anchor[1] + (32 * (maze._height - 1)) + 8))
+        ghost_surf = [ghst_1surf, ghst_2surf, ghst_3surf, ghst_4surf]
+        ghost_rect = [ghst_1rect, ghst_2rect, ghst_3rect, ghst_4rect]
         clock = pygame.time.Clock()
         while True:
             self.level(anchor, grid)
@@ -171,22 +221,18 @@ class Game:
                 x_cell = (spawn[1] + y_pac - anchor[1]) // 32
                 y_cell = (spawn[0] + x_pac - anchor[0]) // 32
                 if mov_dir == Dir.LEFT and grid[x_cell][y_cell][0] == "0":
-                    print("LEFT")
                     pac_dir = Dir.LEFT
                     x_spd = -1
                     y_spd = 0
                 elif mov_dir == Dir.DOWN and grid[x_cell][y_cell][1] == "0":
-                    print("DOWN")
                     pac_dir = Dir.DOWN
                     x_spd = 0
                     y_spd = 1
                 elif mov_dir == Dir.RIGHT and grid[x_cell][y_cell][2] == "0":
-                    print("RIGHT")
                     pac_dir = Dir.RIGHT
                     x_spd = 1
                     y_spd = 0
                 elif mov_dir == Dir.UP and grid[x_cell][y_cell][3] == "0":
-                    print("UP")
                     pac_dir = Dir.UP
                     x_spd = 0
                     y_spd = -1
@@ -209,7 +255,6 @@ class Game:
                 case 12:
                     pacman_surf = pygame.image.load(f"pacman-art/pacman-{pac_dir_img}/3.png").convert_alpha()
             pac_state = (pac_state + 1) % 13
-
             pacman_rect = pacman_surf.get_rect()
 
             if (((spawn[0] + x_pac - anchor[0]) % 32 == 8) and
@@ -234,6 +279,10 @@ class Game:
             pacman_rect.topleft = (spawn[0] + x_pac,
                                    spawn[1] + y_pac)
             self.screen.blit(pacman_surf, pacman_rect)
+            if not (ghost_c % 32):
+                speeds = self.ghost_dir(grid, anchor, ghost_rect)
+            ghost_c = (ghost_c + 1) % 32
+            self.ghost(ghost_rect, ghost_surf, speeds)
             clock.tick(60)
             pygame.display.flip()
 
