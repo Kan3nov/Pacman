@@ -133,16 +133,21 @@ class Game:
         self.screen.blit(resized_blueG, (start, 50))
         start += 176
         self.screen.blit(title_2, (start, 50))
-    
-    def level(self, level_number: str = 1) -> None:
-        #lev_name, lev_size = self.parser.json_dict["levels&size"][level_number - 1]
-        #print(lev_size)
-        maze = MazeGenerator((15, 15))
+
+    def pacman(self):
+
+        maze = MazeGenerator()
         maze.generate()
         grid = [[dec_to_bin(y, 4) for y in x] for x in maze.maze]
+        print(maze._width)
 
+        x = (1960 - maze._width * 32) // 2
+        y = (1080 - maze._height * 32) // 2
+        anchor = (x, y)
+        print("anchor: ", anchor)
         clock = pygame.time.Clock()
         while True:
+            self.level(anchor, grid)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -154,18 +159,18 @@ class Game:
                     elif event.key == pygame.K_UP:
                         self.pac_dir = Dir.UP
                         self.x_spd = 0
-                        self.y_spd = -2
+                        self.y_spd = -1
                     elif event.key == pygame.K_DOWN:
                         self.pac_dir = Dir.DOWN
                         self.x_spd = 0
-                        self.y_spd = 2
+                        self.y_spd = 1
                     elif event.key == pygame.K_RIGHT:
                         self.pac_dir = Dir.RIGHT
-                        self.x_spd = 2
+                        self.x_spd = 1
                         self.y_spd = 0
                     elif event.key == pygame.K_LEFT:
                         self.pac_dir = Dir.LEFT
-                        self.x_spd = -2
+                        self.x_spd = -1
                         self.y_spd = 0
 
             match self.pac_dir:
@@ -189,57 +194,62 @@ class Game:
                     pacman_surf = pygame.image.load(f"pacman-art/pacman-{self.pac_dir_img}/3.png").convert_alpha()
                     self.pac_state = 0
 
-            pacman_rect = pacman_surf.get_rect(center=(0, 0))
+            spawn = (x + 32 * 7, y + 32 * 6)
+            pacman_rect = pacman_surf.get_rect(topleft = spawn)
+            print("topleft of pacman : ", pacman_rect.topleft)
 
-            self.screen.fill("#003049")
-            anchor = (600, 150)
-            tile = 32
-            y = 0
-            for row in grid:
-                x = 0
-                for cell in row:
-                    if cell[3] == "1":  # North
-                        pygame.draw.line(
-                            self.screen,
-                            "white",
-                            (anchor[0] + x * tile, anchor[1] + y * tile),
-                            (anchor[0] + x * tile + tile, anchor[1] + y * tile),
-                            2
-                        )
-                    if cell[2] == "1":  # East
-                        pygame.draw.line(
-                            self.screen,
-                            "white",
-                            (anchor[0] + x * tile + tile, anchor[1] + y * tile),
-                            (anchor[0] + x * tile + tile,
-                             anchor[1] + y * tile + tile),
-                            2
-                        )
-                    if cell[1] == "1":  # South
-                        pygame.draw.line(
-                            self.screen,
-                            "white",
-                            (anchor[0] + x * tile, anchor[1] + y * tile + tile),
-                            (anchor[0] + x * tile + tile,
-                             anchor[1] + y * tile + tile),
-                            2
-                        )
-                    if cell[0] == "1":  # West
-                        pygame.draw.line(
-                            self.screen,
-                            "white",
-                            (anchor[0] + x * tile, anchor[1] + y * tile),
-                            (anchor[0] + x * tile, anchor[1] + y * tile + tile),
-                            2
-                        )
-                    x += 1
-                y += 1
             self.x_pac += self.x_spd
             self.y_pac += self.y_spd
-            pacman_rect.topleft = (anchor[0] + self.x_pac, anchor[1] + self.y_pac)
+            pacman_rect.topleft = (spawn[0] + self.x_pac, spawn[1] + self.y_pac)
             self.screen.blit(pacman_surf, pacman_rect)
             clock.tick(60)
             pygame.display.flip()
+
+    def level(self, anchor: tuple[int, int], grid: list[list]) -> None:
+        #lev_name, lev_size = self.parser.json_dict["levels&size"][level_number - 1]
+        #print(lev_size)
+        self.screen.fill("#003049")
+        tile = 32
+        y = 0
+        for row in grid:
+            x = 0
+            for cell in row:
+                if cell[0] == "1":  # West
+                    pygame.draw.line(
+                        self.screen,
+                        "white",
+                        (anchor[0] + x * tile, anchor[1] + y * tile),
+                        (anchor[0] + x * tile, anchor[1] + y * tile + tile),
+                        2
+                    )
+                if cell[1] == "1":  # South
+                    pygame.draw.line(
+                        self.screen,
+                        "white",
+                        (anchor[0] + x * tile, anchor[1] + y * tile + tile),
+                        (anchor[0] + x * tile + tile,
+                            anchor[1] + y * tile + tile),
+                        2
+                    )
+                if cell[2] == "1":  # East
+                    pygame.draw.line(
+                        self.screen,
+                        "white",
+                        (anchor[0] + x * tile + tile, anchor[1] + y * tile),
+                        (anchor[0] + x * tile + tile,
+                            anchor[1] + y * tile + tile),
+                        2
+                    )
+                if cell[3] == "1":  # North
+                    pygame.draw.line(
+                        self.screen,
+                        "white",
+                        (anchor[0] + x * tile, anchor[1] + y * tile),
+                        (anchor[0] + x * tile + tile, anchor[1] + y * tile),
+                        2
+                    )
+                x += 1
+            y += 1
 
 
 
@@ -252,7 +262,7 @@ def main_screen():
 
     game = Game()
     while True:
-        game.level()
+        game.pacman()
         pygame.display.flip()
 
 
