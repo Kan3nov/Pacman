@@ -204,13 +204,11 @@ class Game:
             match pac_state:
                 case 0:
                     pacman_surf = pygame.image.load(f"pacman-art/pacman-{pac_dir_img}/1.png").convert_alpha()
-                    pac_state = 1
-                case 1:
+                case 6:
                     pacman_surf = pygame.image.load(f"pacman-art/pacman-{pac_dir_img}/2.png").convert_alpha()
-                    pac_state = 2
-                case 2:
+                case 12:
                     pacman_surf = pygame.image.load(f"pacman-art/pacman-{pac_dir_img}/3.png").convert_alpha()
-                    pac_state = 0
+            pac_state = (pac_state + 1) % 13
 
             pacman_rect = pacman_surf.get_rect()
 
