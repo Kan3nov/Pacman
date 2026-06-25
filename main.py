@@ -63,13 +63,6 @@ class Game:
         self.white_col = (255, 255, 255)
         self.btnfont = pygame.font.SysFont(None, 60)
         self.title_font = pygame.font.SysFont(None, 200)
-        self.x_spd = 0
-        self.y_spd = 0
-        self.x_pac = 8
-        self.y_pac = 8
-        self.pac_state = 0
-        self.pac_dir_img = None
-        self.pac_dir = Dir.RIGHT
         self.parser = Jsonparser("config.json")
 
     
@@ -139,12 +132,21 @@ class Game:
         maze = MazeGenerator()
         maze.generate()
         grid = [[dec_to_bin(y, 4) for y in x] for x in maze.maze]
-        print(maze._width)
+        print(grid)
+
+        x_spd = 0
+        y_spd = 0
+        x_pac = 8
+        y_pac = 8
+        pac_state = 0
+        pac_dir_img = None
+        pac_dir = Dir.RIGHT
 
         x = (1960 - maze._width * 32) // 2
         y = (1080 - maze._height * 32) // 2
         anchor = (x, y)
-        print("anchor: ", anchor)
+        spawn = (x + 32 * 7, y + 32 * 6)
+        mov_dir = None
         clock = pygame.time.Clock()
         while True:
             self.level(anchor, grid)
@@ -156,51 +158,83 @@ class Game:
                     if event.key == pygame.K_4:
                         pygame.quit()
                         sys.exit()
-                    elif event.key == pygame.K_UP:
-                        self.pac_dir = Dir.UP
-                        self.x_spd = 0
-                        self.y_spd = -1
+                    if event.key == pygame.K_UP:
+                        mov_dir = Dir.UP
                     elif event.key == pygame.K_DOWN:
-                        self.pac_dir = Dir.DOWN
-                        self.x_spd = 0
-                        self.y_spd = 1
+                        mov_dir = Dir.DOWN
                     elif event.key == pygame.K_RIGHT:
-                        self.pac_dir = Dir.RIGHT
-                        self.x_spd = 1
-                        self.y_spd = 0
+                        mov_dir = Dir.RIGHT
                     elif event.key == pygame.K_LEFT:
-                        self.pac_dir = Dir.LEFT
-                        self.x_spd = -1
-                        self.y_spd = 0
+                        mov_dir = Dir.LEFT
+            if (((spawn[0] + x_pac - anchor[0]) % 32 == 8) and
+                    (spawn[1] + y_pac - anchor[1]) % 32 == 8):
+                x_cell = (spawn[1] + y_pac - anchor[1]) // 32
+                y_cell = (spawn[0] + x_pac - anchor[0]) // 32
+                if mov_dir == Dir.LEFT and grid[x_cell][y_cell][0] == "0":
+                    print("LEFT")
+                    pac_dir = Dir.LEFT
+                    x_spd = -1
+                    y_spd = 0
+                elif mov_dir == Dir.DOWN and grid[x_cell][y_cell][1] == "0":
+                    print("DOWN")
+                    pac_dir = Dir.DOWN
+                    x_spd = 0
+                    y_spd = 1
+                elif mov_dir == Dir.RIGHT and grid[x_cell][y_cell][2] == "0":
+                    print("RIGHT")
+                    pac_dir = Dir.RIGHT
+                    x_spd = 1
+                    y_spd = 0
+                elif mov_dir == Dir.UP and grid[x_cell][y_cell][3] == "0":
+                    print("UP")
+                    pac_dir = Dir.UP
+                    x_spd = 0
+                    y_spd = -1
 
-            match self.pac_dir:
+            match pac_dir:
                 case Dir.UP:
-                    self.pac_dir_img = "up"
+                    pac_dir_img = "up"
                 case Dir.DOWN:
-                    self.pac_dir_img = "down"
+                    pac_dir_img = "down"
                 case Dir.RIGHT:
-                    self.pac_dir_img = "right"
+                    pac_dir_img = "right"
                 case Dir.LEFT:
-                    self.pac_dir_img = "left"
+                    pac_dir_img = "left"
 
-            match self.pac_state:
+            match pac_state:
                 case 0:
-                    pacman_surf = pygame.image.load(f"pacman-art/pacman-{self.pac_dir_img}/1.png").convert_alpha()
-                    self.pac_state = 1
+                    pacman_surf = pygame.image.load(f"pacman-art/pacman-{pac_dir_img}/1.png").convert_alpha()
+                    pac_state = 1
                 case 1:
-                    pacman_surf = pygame.image.load(f"pacman-art/pacman-{self.pac_dir_img}/2.png").convert_alpha()
-                    self.pac_state = 2
+                    pacman_surf = pygame.image.load(f"pacman-art/pacman-{pac_dir_img}/2.png").convert_alpha()
+                    pac_state = 2
                 case 2:
-                    pacman_surf = pygame.image.load(f"pacman-art/pacman-{self.pac_dir_img}/3.png").convert_alpha()
-                    self.pac_state = 0
+                    pacman_surf = pygame.image.load(f"pacman-art/pacman-{pac_dir_img}/3.png").convert_alpha()
+                    pac_state = 0
 
-            spawn = (x + 32 * 7, y + 32 * 6)
-            pacman_rect = pacman_surf.get_rect(topleft = spawn)
-            print("topleft of pacman : ", pacman_rect.topleft)
+            pacman_rect = pacman_surf.get_rect()
 
-            self.x_pac += self.x_spd
-            self.y_pac += self.y_spd
-            pacman_rect.topleft = (spawn[0] + self.x_pac, spawn[1] + self.y_pac)
+            if (((spawn[0] + x_pac - anchor[0]) % 32 == 8) and
+                    (spawn[1] + y_pac - anchor[1]) % 32 == 8):
+                x_cell = (spawn[1] + y_pac - anchor[1]) // 32
+                y_cell = (spawn[0] + x_pac - anchor[0]) // 32
+                if pac_dir == Dir.LEFT and grid[x_cell][y_cell][0] == "1":
+                    x_spd = 0
+                    y_spd = 0
+                elif pac_dir == Dir.DOWN and grid[x_cell][y_cell][1] == "1":
+                    x_spd = 0
+                    y_spd = 0
+                elif pac_dir == Dir.RIGHT and grid[x_cell][y_cell][2] == "1":
+                    x_spd = 0
+                    y_spd = 0
+                elif pac_dir == Dir.UP and grid[x_cell][y_cell][3] == "1":
+                    x_spd = 0
+                    y_spd = 0
+            x_pac += x_spd
+            y_pac += y_spd
+
+            pacman_rect.topleft = (spawn[0] + x_pac,
+                                   spawn[1] + y_pac)
             self.screen.blit(pacman_surf, pacman_rect)
             clock.tick(60)
             pygame.display.flip()
