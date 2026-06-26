@@ -68,65 +68,78 @@ class Game:
 
     
     def main_menu(self) -> None:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
         btn_Xstart = int(self.x_size * 0.45)
         btn_Ystart = int(self.y_size * 0.4)
-        self.screen.fill((0, 0, 0))
-        mouse = pygame.mouse.get_pos()
-
         play_button = pygame.Rect(btn_Xstart, btn_Ystart, 300, 75)
         score_button = pygame.Rect(btn_Xstart, btn_Ystart + 120, 300, 75)
         cont_button = pygame.Rect(btn_Xstart, btn_Ystart + 240, 300, 75)
+        pac_image = pygame.image.load("resources/Pacman_HD.png")
+        pac_image_rect = pac_image.get_rect()
+        red_ghost = pygame.image.load("resources/redgb.png")
+        blue_ghost = pygame.image.load("resources/bluegb.jpeg")
 
-        pac_image = pygame.image.load("resources/Pacman_HD.png").convert_alpha()
-        red_ghost = pygame.image.load("resources/redgb.png").convert_alpha()
-        blue_ghost = pygame.image.load("resources/bluegb.jpeg").convert_alpha()
+        while True:
+            mouse = pygame.mouse.get_pos()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if collidePoint(play_button, mouse):
+                        for lev in self.parser.json_dict["levels&size"]:
+                            self.pacman(lev[0], lev[1])
+                    if collidePoint(pac_image_rect, mouse):
+                        for lev in self.parser.json_dict["levels&size"]:
+                            self.pacman(lev[0], lev[1], True)
 
-        resized_redG = pygame.transform.scale(red_ghost, (175, 175))
-        resized_blueG = pygame.transform.scale(blue_ghost, (175, 175))
-        resized_pac = pygame.transform.scale(pac_image, (200, 200))
+            self.screen.fill((0, 0, 0))
 
-        pygame.draw.rect(
-            self.screen,
-            (self.unpressed_btn if play_button.collidepoint(mouse)
-             else self.pressed_btn),
-            play_button)
-        pygame.draw.rect(
-            self.screen,
-            (self.unpressed_btn if score_button.collidepoint(mouse)
-             else self.pressed_btn),
-            score_button)
-        pygame.draw.rect(
-            self.screen,
-            (self.unpressed_btn if cont_button.collidepoint(mouse)
-             else self.pressed_btn),
-            cont_button)
+            resized_redG = pygame.transform.scale(red_ghost, (175, 175))
+            resized_blueG = pygame.transform.scale(blue_ghost, (175, 175))
+            resized_pac = pygame.transform.scale(pac_image, (200, 200))
 
-        title_1 = self.title_font.render("Pac", True, "yellow")
-        title_2 = self.title_font.render("an", True, "yellow")
-        tit1_h, _ = title_1.get_size()
-        tit2_h, _ = title_2.get_size()
-        play_text = self.btnfont.render("Start Game", True, self.white_col)
-        score_text = self.btnfont.render("Score board", True, self.white_col)
-        cont_text = self.btnfont.render("Controls", True, self.white_col)
+            pygame.draw.rect(
+                self.screen,
+                (self.unpressed_btn if collidePoint(play_button, mouse)
+                 else self.pressed_btn),
+                play_button)
+            pygame.draw.rect(
+                self.screen,
+                (self.unpressed_btn if collidePoint(score_button, mouse)
+                 else self.pressed_btn),
+                score_button)
+            pygame.draw.rect(
+                self.screen,
+                (self.unpressed_btn if collidePoint(cont_button, mouse)
+                 else self.pressed_btn),
+                cont_button)
 
-        self.screen.blit(play_text, (btn_Xstart + 30, btn_Ystart + 35))
-        self.screen.blit(score_text, (btn_Xstart + 30, btn_Ystart + 150))
-        self.screen.blit(cont_text, (btn_Xstart + 50, btn_Ystart + 265))
+            title_1 = self.title_font.render("Pac", True, "yellow")
+            title_2 = self.title_font.render("an", True, "yellow")
+            tit1_h, _ = title_1.get_size()
+            tit2_h, _ = title_2.get_size()
+            play_text = self.btnfont.render("Start Game", True,
+                                            self.white_col)
+            score_text = self.btnfont.render("Score board", True,
+                                             self.white_col)
+            cont_text = self.btnfont.render("Controls", True,
+                                            self.white_col)
 
-        start = 500
-        self.screen.blit(resized_pac, (start, 50))
-        start += 201
-        self.screen.blit(title_1, (start, 50))
-        start += tit1_h + 2
-        self.screen.blit(resized_redG, (start, 50))
-        start += 176
-        self.screen.blit(resized_blueG, (start, 50))
-        start += 176
-        self.screen.blit(title_2, (start, 50))
+            self.screen.blit(play_text, (btn_Xstart + 30, btn_Ystart + 25))
+            self.screen.blit(score_text, (btn_Xstart + 30, btn_Ystart + 145))
+            self.screen.blit(cont_text, (btn_Xstart + 50, btn_Ystart + 265))
+
+            start = 500
+            self.screen.blit(resized_pac, (start, 50))
+            start += 201
+            self.screen.blit(title_1, (start, 50))
+            start += tit1_h + 2
+            self.screen.blit(resized_redG, (start, 50))
+            start += 176
+            self.screen.blit(resized_blueG, (start, 50))
+            start += 176
+            self.screen.blit(title_2, (start, 50))
+            pygame.display.flip()
 
     def ghost_dir(self, grid: list[list], anchor: tuple,
                   ghost_rect: list[pygame.Rect]) -> list[tuple[int, int]]:
@@ -165,9 +178,10 @@ class Game:
             ghost.topleft = (ghost.x + x_speed, ghost.y + y_speed)
             self.screen.blit(ghost_surf[index], ghost)
 
-    def pacman(self):
+    def pacman(self, lev_name: str = 1, size: tuple[int, int] = (15, 15),
+               cheat_mode: bool = False):
 
-        maze = MazeGenerator()
+        maze = MazeGenerator(size)
         maze.generate()
         grid = [[dec_to_bin(y, 4) for y in x] for x in maze.maze]
 
@@ -343,7 +357,8 @@ def main_screen():
 
     game = Game()
     while True:
-        game.pacman()
+        #game.pacman()
+        game.main_menu()
         pygame.display.flip()
 
 

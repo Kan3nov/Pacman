@@ -51,7 +51,8 @@ class Jsonparser:
             try:
                 if json_dict[item] is not None and json_dict[item] != "":
                     pass
-                raise KeyError(f"item {item} does not has a value")
+                else:
+                    raise KeyError(f"item {item} does not has a value")
             except KeyError:
                 json_dict[item] = defualts[item]
 
@@ -59,6 +60,6 @@ class Jsonparser:
 
 
 file = Jsonparser("config.json")
-#print(file.json_str)
-# print(file.json_dict)
-# print(file.sorted_board)
+print(file.json_str)
+print(file.json_dict)
+print(file.sorted_board)
