@@ -37,7 +37,7 @@ class Jsonparser:
             "highscore_filename": "score_board.json",
             "lives": 3,
             "pacgum": 42,
-            "points_per_pacgum": 10,
+            "": 10,
             "points_per_super_pacgum": 50,
             "points_per_ghost": 200,
             "seed": 42,

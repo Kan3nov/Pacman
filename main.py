@@ -50,6 +50,7 @@ class Game:
         self.btnfont = pygame.font.SysFont(None, 60)
         self.title_font = pygame.font.SysFont(None, 200)
         self.parser = Jsonparser("config.json")
+        self.score = 0
 
     def main_menu(self) -> None:
         btn_Xstart = int(self.x_size * 0.45)
@@ -163,23 +164,32 @@ class Game:
 
     def pacgum(self, grid):
         num = self.parser.json_dict["pacgum"]
-        gum_grid = [[False for _ in range(15)]] * 15
+        gum_grid = []
+        for x in range(15):
+            gum_grid.append([])
+            for y in range(15):
+                gum_grid[x].append(False)
         cells = []
         for x in range(15):
             for y in range(15):
-                if ((x == 0 and y == 0) or (x == 0 and y == 14)
-                        or (x == 14 and y == 0) or (x == 14 and y == 14)):
+                if (x == 0 and y == 14):
                     gum_grid[y][x] = True
                     continue
-                elif grid[y][x] == "1111":
+                elif (x == 0 and y == 0):
+                    gum_grid[y][x] = True
+                    continue
+                elif (x == 14 and y == 0):
+                    gum_grid[y][x] = True
+                    continue
+                elif (x == 14 and y == 14):
+                    gum_grid[y][x] = True
+                    continue
+                if grid[y][x] == "1111":
                     continue
                 cells.append((x, y))
         gum_pos = random.sample(cells, k=num)
-        print(gum_pos)
-        print("len of gum_pos : ", len(gum_pos))
         for gum in gum_pos:
             gum_grid[gum[1]][gum[0]] = True
-        print(gum_grid)
         return gum_grid
 
     def draw_pacgum(self, anchor: tuple[int, int], gum_grid: list[list[bool]]) -> None:
@@ -301,8 +311,19 @@ class Game:
 
             if (((spawn[0] + x_pac - anchor[0]) % 32 == 8) and
                     (spawn[1] + y_pac - anchor[1]) % 32 == 8):
+                
                 x_cell = (spawn[1] + y_pac - anchor[1]) // 32
                 y_cell = (spawn[0] + x_pac - anchor[0]) // 32
+                if gum_grid[x_cell][y_cell]:
+                    gum_grid[x_cell][y_cell] = False
+                    if ((x_cell == 0 and y_cell == 0) or
+                       (x_cell == 0 and y_cell == 14)
+                       or (x_cell == 14 and y_cell == 0)
+                       or (x_cell == 14 and y_cell == 14)):
+                        self.score += self.parser.json_dict["points_per_super_pacgum"]
+                    else:
+                        self.score += self.parser.json_dict["points_per_pacgum"]
+
                 if pac_dir == Dir.LEFT and grid[x_cell][y_cell][0] == "1":
                     x_spd = 0
                     y_spd = 0
@@ -331,7 +352,9 @@ class Game:
     def level(self, anchor: tuple[int, int], grid: list[list]) -> None:
         #lev_name, lev_size = self.parser.json_dict["levels&size"][level_number - 1]
         #print(lev_size)
+        score = self.title_font.render(str(self.score), True, "yellow")
         self.screen.fill("#003049")
+        self.screen.blit(score, score.get_rect(topleft=(0, 0)))
         tile = 32
         y = 0
         for row in grid:
