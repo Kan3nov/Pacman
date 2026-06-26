@@ -56,6 +56,6 @@ class Jsonparser:
 
 
 file = Jsonparser("config.json")
-print(file.json_str)
-print(file.json_dict)
-print(file.sorted_board)
+# print(file.json_str)
+# print(file.json_dict)
+# print(file.sorted_board)
