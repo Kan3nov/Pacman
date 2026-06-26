@@ -370,9 +370,17 @@ class Game:
                             ghost_rect[index] = None
                             self.score += self.parser.json_dict["points_per_ghost"]
                             ghost_time[index] = pygame.time.get_ticks()
-                        else:
-                            #game_over()
-                            pass
+                        elif not cheat_mode:
+                            self.parser.json_dict["lives"] -= 1
+                            if self.parser.json_dict["lives"] == 0:
+                                pass
+                                #game_over()
+                            else:
+                                x_pac = 8
+                                y_pac = 8
+                                mov_dir = None
+                                x_spd = 0
+                                y_spd = 0
 
             for index, time in enumerate(ghost_time):
                 if time:
