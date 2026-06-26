@@ -65,7 +65,6 @@ class Game:
         self.btnfont = pygame.font.SysFont(None, 60)
         self.title_font = pygame.font.SysFont(None, 200)
         self.parser = Jsonparser("config.json")
-
     
     def main_menu(self) -> None:
         btn_Xstart = int(self.x_size * 0.45)
@@ -86,12 +85,11 @@ class Game:
                     sys.exit()
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if collidePoint(play_button, mouse):
-                        for lev in self.parser.json_dict["levels&size"]:
-                            self.pacman(lev[0], lev[1])
+                        for lev in range(1, 11):
+                            self.pacman(lev)
                     if collidePoint(pac_image_rect, mouse):
-                        for lev in self.parser.json_dict["levels&size"]:
-                            self.pacman(lev[0], lev[1], True)
-
+                        for lev in range(1, 11):
+                            self.pacman(lev, True)
             self.screen.fill((0, 0, 0))
 
             resized_redG = pygame.transform.scale(red_ghost, (175, 175))
@@ -178,10 +176,10 @@ class Game:
             ghost.topleft = (ghost.x + x_speed, ghost.y + y_speed)
             self.screen.blit(ghost_surf[index], ghost)
 
-    def pacman(self, lev_name: str = 1, size: tuple[int, int] = (15, 15),
+    def pacman(self, lev_no: str = 1,
                cheat_mode: bool = False):
 
-        maze = MazeGenerator(size)
+        maze = MazeGenerator()
         maze.generate()
         grid = [[dec_to_bin(y, 4) for y in x] for x in maze.maze]
 
