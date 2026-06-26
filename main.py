@@ -130,37 +130,41 @@ class Game:
 
         speeds = []
         for ghost in ghost_rect:
-            x_cell = (ghost.x - anchor[0]) // 32
-            y_cell = (ghost.y - anchor[1]) // 32
-            cell = grid[y_cell][x_cell]
-            open_paths = []
-            if cell[0] == "0":
-                open_paths.append(Dir.LEFT)
-            if cell[1] == "0":
-                open_paths.append(Dir.DOWN)
-            if cell[2] == "0":
-                open_paths.append(Dir.RIGHT)
-            if cell[3] == "0":
-                open_paths.append(Dir.UP)
-            next_path = random.choice(open_paths)
-            if next_path == Dir.UP:
-                speeds.append((0, -1))
-            elif next_path == Dir.DOWN:
-                speeds.append((0, 1))
-            elif next_path == Dir.RIGHT:
-                speeds.append((1, 0))
-            elif next_path == Dir.LEFT:
-                speeds.append((-1, 0))
+            if ghost:
+                x_cell = (ghost.x - anchor[0]) // 32
+                y_cell = (ghost.y - anchor[1]) // 32
+                cell = grid[y_cell][x_cell]
+                open_paths = []
+                if cell[0] == "0":
+                    open_paths.append(Dir.LEFT)
+                if cell[1] == "0":
+                    open_paths.append(Dir.DOWN)
+                if cell[2] == "0":
+                    open_paths.append(Dir.RIGHT)
+                if cell[3] == "0":
+                    open_paths.append(Dir.UP)
+                next_path = random.choice(open_paths)
+                if next_path == Dir.UP:
+                    speeds.append((0, -1))
+                elif next_path == Dir.DOWN:
+                    speeds.append((0, 1))
+                elif next_path == Dir.RIGHT:
+                    speeds.append((1, 0))
+                elif next_path == Dir.LEFT:
+                    speeds.append((-1, 0))
+            else:
+                speeds.append((0, 0))
         return speeds
 
     def ghost(self, ghost_rect: list[pygame.Rect],
               ghost_surf: list[pygame.Surface],
               speeds: list[tuple[int, int]]) -> None:
         for index, ghost in enumerate(ghost_rect):
-            speed = speeds[index]
-            x_speed, y_speed = speed
-            ghost.topleft = (ghost.x + x_speed, ghost.y + y_speed)
-            self.screen.blit(ghost_surf[index], ghost)
+            if ghost:
+                speed = speeds[index]
+                x_speed, y_speed = speed
+                ghost.topleft = (ghost.x + x_speed, ghost.y + y_speed)
+                self.screen.blit(ghost_surf[index], ghost)
 
     def pacgum(self, grid):
         num = self.parser.json_dict["pacgum"]
@@ -209,7 +213,6 @@ class Game:
                     else:
                         self.screen.blit(pacgum_surf, pacgum_rect)
 
-
     def pacman(self, lev_no: str = 1,
                cheat_mode: bool = False):
 
@@ -233,18 +236,29 @@ class Game:
         spawn = (x + 32 * 7, y + 32 * 6)
         mov_dir = None
 
-        ghst_1surf = pygame.image.load(f"pacman-art/ghosts/blinky.png").convert_alpha()
-        ghst_2surf = pygame.image.load(f"pacman-art/ghosts/clyde.png").convert_alpha()
-        ghst_3surf = pygame.image.load(f"pacman-art/ghosts/inky.png").convert_alpha()
-        ghst_4surf = pygame.image.load(f"pacman-art/ghosts/pinky.png").convert_alpha()
+        ghst_1surf = pygame.image.load("pacman-art/ghosts/blinky.png").convert_alpha()
+        ghst_2surf = pygame.image.load("pacman-art/ghosts/clyde.png").convert_alpha()
+        ghst_3surf = pygame.image.load("pacman-art/ghosts/inky.png").convert_alpha()
+        ghst_4surf = pygame.image.load("pacman-art/ghosts/pinky.png").convert_alpha()
+        ghst_5surf = pygame.image.load("pacman-art/ghosts/blue_ghost.png").convert_alpha()
 
-        ghst_1rect = ghst_1surf.get_rect(topleft=(anchor[0] + 8, anchor[1] + 8))
-        ghst_2rect = ghst_2surf.get_rect(topleft=(anchor[0] + (32 * (maze._width - 1)) + 8, anchor[1] + 8))
-        ghst_3rect = ghst_3surf.get_rect(topleft=(anchor[0] + 8, anchor[1] +  32 * (maze._height - 1) + 8))
-        ghst_4rect = ghst_4surf.get_rect(topleft=(anchor[0] + (32 * (maze._width - 1)) + 8, anchor[1] + (32 * (maze._height - 1)) + 8))
+        ghst1_res = (anchor[0] + 8, anchor[1] + 8)
+        ghst2_res = (anchor[0] + (32 * (maze._width - 1)) + 8, anchor[1] + 8)
+        ghst3_res = (anchor[0] + 8, anchor[1] + 32 * (maze._height - 1) + 8)
+        ghst4_res = (anchor[0] + (32 * (maze._width - 1)) + 8, anchor[1] + (32 * (maze._height - 1)) + 8)
+
+        ghost_res = [ghst1_res, ghst2_res, ghst3_res, ghst4_res]
+        ghst_1rect = ghst_1surf.get_rect(topleft=ghst1_res)
+        ghst_2rect = ghst_2surf.get_rect(topleft=ghst2_res)
+        ghst_3rect = ghst_3surf.get_rect(topleft=ghst3_res)
+        ghst_4rect = ghst_4surf.get_rect(topleft=ghst4_res)
 
         ghost_surf = [ghst_1surf, ghst_2surf, ghst_3surf, ghst_4surf]
         ghost_rect = [ghst_1rect, ghst_2rect, ghst_3rect, ghst_4rect]
+        ghost_time = [None, None, None, None]
+
+        super_pac = False
+        super_time = 0
 
         gum_grid = self.pacgum(grid)
 
@@ -321,6 +335,9 @@ class Game:
                        or (x_cell == 14 and y_cell == 0)
                        or (x_cell == 14 and y_cell == 14)):
                         self.score += self.parser.json_dict["points_per_super_pacgum"]
+                        super_time = pygame.time.get_ticks()
+                        super_pac = True
+                        ghost_surf = [ghst_5surf, ghst_5surf, ghst_5surf, ghst_5surf] 
                     else:
                         self.score += self.parser.json_dict["points_per_pacgum"]
 
@@ -339,8 +356,30 @@ class Game:
             x_pac += x_spd
             y_pac += y_spd
 
+            curr_time = pygame.time.get_ticks()
+            if (curr_time - super_time) > 10000:
+                super_pac = False
+                ghost_surf = [ghst_1surf, ghst_2surf, ghst_3surf, ghst_4surf]
+
             pacman_rect.topleft = (spawn[0] + x_pac,
                                    spawn[1] + y_pac)
+            for index, ghost in enumerate(ghost_rect):
+                if ghost:
+                    if collideRect(pacman_rect, ghost):
+                        if super_pac:
+                            ghost_rect[index] = None
+                            self.score += self.parser.json_dict["points_per_ghost"]
+                            ghost_time[index] = pygame.time.get_ticks()
+                        else:
+                            #game_over()
+                            pass
+
+            for index, time in enumerate(ghost_time):
+                if time:
+                    if (curr_time - time) > 5000:
+                        ghost_time[index] = None
+                        ghost_rect[index] = ghost_surf[index].get_rect(topleft=ghost_res[index])
+
             self.screen.blit(pacman_surf, pacman_rect)
             if not (ghost_c % 32):
                 speeds = self.ghost_dir(grid, anchor, ghost_rect)
