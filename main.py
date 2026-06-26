@@ -12,21 +12,6 @@ class Dir(Enum):
     DOWN = 2
     LEFT = 3
 
-#def game():
-#    while True:
-#        for event in pygame.event.get():
-#            if event.type == pygame.QUIT:
-#                pygame.quit()
-#                sys.exit()
-#
-#        screen.fill((40, 40, 40))
-#
-#        text = font.render("Game Started!", True, WHITE)
-#        screen.blit(text, (250, 350))
-#
-#        pygame.display.update()
-#
-
 
 def dec_to_bin(dec: int, digs: int) -> str:
     res = ""
@@ -58,24 +43,24 @@ class Game:
         self.x_size = 1920
         self.y_size = 1080
         self.screen = pygame.display.set_mode((self.x_size, self.y_size))
-        
+
         self.pressed_btn = (253, 216, 53)
         self.unpressed_btn = (251, 192, 45)
         self.white_col = (255, 255, 255)
         self.btnfont = pygame.font.SysFont(None, 60)
         self.title_font = pygame.font.SysFont(None, 200)
         self.parser = Jsonparser("config.json")
-    
+
     def main_menu(self) -> None:
         btn_Xstart = int(self.x_size * 0.45)
         btn_Ystart = int(self.y_size * 0.4)
         play_button = pygame.Rect(btn_Xstart, btn_Ystart, 300, 75)
         score_button = pygame.Rect(btn_Xstart, btn_Ystart + 120, 300, 75)
         cont_button = pygame.Rect(btn_Xstart, btn_Ystart + 240, 300, 75)
-        pac_image = pygame.image.load("resources/Pacman_HD.png")
+        pac_image = pygame.image.load("resources/Pacman_HD.png").convert_alpha()
         pac_image_rect = pac_image.get_rect()
-        red_ghost = pygame.image.load("resources/redgb.png")
-        blue_ghost = pygame.image.load("resources/bluegb.jpeg")
+        red_ghost = pygame.image.load("resources/redgb.png").convert_alpha()
+        blue_ghost = pygame.image.load("resources/bluegb.jpeg").convert_alpha()
 
         while True:
             mouse = pygame.mouse.get_pos()
@@ -141,7 +126,7 @@ class Game:
 
     def ghost_dir(self, grid: list[list], anchor: tuple,
                   ghost_rect: list[pygame.Rect]) -> list[tuple[int, int]]:
-        
+
         speeds = []
         for ghost in ghost_rect:
             x_cell = (ghost.x - anchor[0]) // 32
@@ -176,6 +161,45 @@ class Game:
             ghost.topleft = (ghost.x + x_speed, ghost.y + y_speed)
             self.screen.blit(ghost_surf[index], ghost)
 
+    def pacgum(self, grid):
+        num = self.parser.json_dict["pacgum"]
+        gum_grid = [[False for _ in range(15)]] * 15
+        cells = []
+        for x in range(15):
+            for y in range(15):
+                if ((x == 0 and y == 0) or (x == 0 and y == 14)
+                        or (x == 14 and y == 0) or (x == 14 and y == 14)):
+                    gum_grid[y][x] = True
+                    continue
+                elif grid[y][x] == "1111":
+                    continue
+                cells.append((x, y))
+        gum_pos = random.sample(cells, k=num)
+        print(gum_pos)
+        print("len of gum_pos : ", len(gum_pos))
+        for gum in gum_pos:
+            gum_grid[gum[1]][gum[0]] = True
+        print(gum_grid)
+        return gum_grid
+
+    def draw_pacgum(self, anchor: tuple[int, int], gum_grid: list[list[bool]]) -> None:
+        pacgum_surf = pygame.image.load("pacman-art/other/dot.png").convert_alpha()
+        pacgum_rect = pacgum_surf.get_rect()
+
+        app_surf = pygame.image.load("pacman-art/other/apple.png").convert_alpha()
+
+        for y, row in enumerate(gum_grid):
+            for x, cell in enumerate(row):
+                if cell:
+                    pos = (anchor[0] + x * 32 + 8, anchor[1] + y * 32 + 8)
+                    pacgum_rect.topleft = pos
+                    if ((x == 0 and y == 0) or (x == 0 and y == 14)
+                            or (x == 14 and y == 0) or (x == 14 and y == 14)):
+                        self.screen.blit(app_surf, pacgum_rect)
+                    else:
+                        self.screen.blit(pacgum_surf, pacgum_rect)
+
+
     def pacman(self, lev_no: str = 1,
                cheat_mode: bool = False):
 
@@ -203,15 +227,21 @@ class Game:
         ghst_2surf = pygame.image.load(f"pacman-art/ghosts/clyde.png").convert_alpha()
         ghst_3surf = pygame.image.load(f"pacman-art/ghosts/inky.png").convert_alpha()
         ghst_4surf = pygame.image.load(f"pacman-art/ghosts/pinky.png").convert_alpha()
+
         ghst_1rect = ghst_1surf.get_rect(topleft=(anchor[0] + 8, anchor[1] + 8))
         ghst_2rect = ghst_2surf.get_rect(topleft=(anchor[0] + (32 * (maze._width - 1)) + 8, anchor[1] + 8))
         ghst_3rect = ghst_3surf.get_rect(topleft=(anchor[0] + 8, anchor[1] +  32 * (maze._height - 1) + 8))
         ghst_4rect = ghst_4surf.get_rect(topleft=(anchor[0] + (32 * (maze._width - 1)) + 8, anchor[1] + (32 * (maze._height - 1)) + 8))
+
         ghost_surf = [ghst_1surf, ghst_2surf, ghst_3surf, ghst_4surf]
         ghost_rect = [ghst_1rect, ghst_2rect, ghst_3rect, ghst_4rect]
+
+        gum_grid = self.pacgum(grid)
+
         clock = pygame.time.Clock()
         while True:
             self.level(anchor, grid)
+            self.draw_pacgum(anchor, gum_grid)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -363,3 +393,4 @@ def main_screen():
 
 if __name__ == "__main__":
     main_screen()
+
