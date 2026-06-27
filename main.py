@@ -270,6 +270,61 @@ class Game:
                     else:
                         self.screen.blit(pacgum_surf, pacgum_rect)
 
+    def gameover(self, win: bool):
+
+        username = ""
+        highlight = "white"
+        no_highlight = "gray"
+        key_input = False
+        error_font = pygame.font.Font(None, 12)
+
+        while True:
+
+            self.screen.fill("blue")
+            if (win):
+                msg = self.btnfont.render("Congratulations!")
+                msg_rect = msg.get_rect(topleft=(1960 // 2 - 100, 1080 // 2))
+                self.screen.blit(msg, msg_rect)
+            else:
+                msg = self.btnfont.render("You lost")
+                msg_rect = msg.get_rect(topleft=(1960 // 2 - 100, 1080 // 2))
+                self.screen.blit(msg, msg_rect)
+                score = self.btnfont.render(f"Score: {self.score}")
+                score_rect = score.get_rect(topleft=(1960 // 2 - 100,
+                                                    1080 // 2 - 100))
+                username_surf = self.btnfont.render(username)
+                username_rect = username_surf.get_rect(topleft=(1960 // 2 - 100,
+                                                                1960 // 2 - 200))
+
+            for event in pygame.event.get():
+                if pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        if collidePoint(username_rect, pygame.mouse.get_pos()):
+                            username_surf.fill(highlight)
+                            key_input = True
+                        else:
+                            username_surf.fill(no_highlight)
+                            key_input = False
+                if pygame.KEYDOWN and key_input:
+                    if ((str(event.unicode).isalnum() or
+                            str(event.unicode) == " ") and
+                            len(username) < 10):
+                        username += str(event.unicode)
+                    elif event.type == pygame.K_BACKSPACE:
+                        username = username[: -1]
+                if (username.count(" ") == len(username)
+                        and len(username) > 0):
+                    error_msg = error_font.render("Usernames should " +
+                                                  "contain at least one " +
+                                                  "alphanumeric character")
+                elif (len(username) == 10):
+                    error_msg = error_font.render("Usernames shouldn't " +
+                                                  "exceed 10 characters")
+
+
+            self.screen.blit(score, score_rect)
+
+
     def pacman(self, lev_no: str = 1, cheat_mode: bool = False):
         """
             Draw Pacman and all ghosts and control their movement.
@@ -321,7 +376,9 @@ class Game:
         ghst1_res = (anchor[0] + 8, anchor[1] + 8)
         ghst2_res = (anchor[0] + (32 * (maze._width - 1)) + 8, anchor[1] + 8)
         ghst3_res = (anchor[0] + 8, anchor[1] + 32 * (maze._height - 1) + 8)
-        ghst4_res = (anchor[0] + (32 * (maze._width - 1)) + 8, anchor[1] + (32 * (maze._height - 1)) + 8)
+        ghst4_res = (anchor[0] + (32 * (maze._width - 1)) + 8,
+                     anchor[1] + (32 * (maze._height - 1)) + 8
+                     )
         ghost_res = [ghst1_res, ghst2_res, ghst3_res, ghst4_res]
 
         ghst_1rect = ghst_1surf.get_rect(topleft=ghst1_res)
@@ -359,6 +416,11 @@ class Game:
                         mov_dir = Dir.RIGHT
                     elif event.key == pygame.K_LEFT:
                         mov_dir = Dir.LEFT
+
+            # Displays the level number
+            level_txt = self.btnfont.render(f"Level {lev_no}/10", True, "white")
+            level_rect = level_txt.get_rect(topleft=(0, 200))
+            self.screen.blit(level_txt, level_rect)
 
             # Ensures that pacman doesn't move unless the corresponding
             # direction is open
@@ -415,6 +477,7 @@ class Game:
             # or a super pacgum and increases score accordingly
             if (((spawn[0] + x_pac - anchor[0]) % 32 == 8) and
                     (spawn[1] + y_pac - anchor[1]) % 32 == 8):
+
                 x_cell = (spawn[1] + y_pac - anchor[1]) // 32
                 y_cell = (spawn[0] + x_pac - anchor[0]) // 32
                 if gum_grid[x_cell][y_cell]:
@@ -425,6 +488,7 @@ class Game:
                        or (x_cell == 14 and y_cell == 14)):
                         self.score += (self.parser
                                        .json_dict["points_per_super_pacgum"])
+
                         super_time = pygame.time.get_ticks()
                         super_pac = True
                         ghost_surf = [ghst_5surf, ghst_5surf, ghst_5surf, ghst_5surf]
@@ -446,6 +510,12 @@ class Game:
                 elif pac_dir == Dir.UP and grid[x_cell][y_cell][3] == "1":
                     x_spd = 0
                     y_spd = 0
+
+            pacgum_num = 0
+            for row in gum_grid:
+                pacgum_num += sum(row)
+            if (pacgum_num <= 0):
+                break
 
             # Update the position of Pacman
             x_pac += x_spd
