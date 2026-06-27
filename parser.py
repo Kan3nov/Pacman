@@ -52,10 +52,33 @@ class Jsonparser:
             except KeyError:
                 json_dict[item] = defualts[item]
 
+    def update_board(self, score_list: list[str: int]) -> None:
+
+        min_key = min(self.sorted_board, key=self.sorted_board.get)
+
+        if self.sorted_board[min_key] > score_list[1]:
+            return
+        else:
+            self.sorted_board[score_list[0]] = score_list[1]
+            del self.sorted_board[min_key]
+            self.save_data()
+            return
+
+    def check_names(self, name: str):
+        try:
+            if self.sorted_board[name]:
+                return True
+        except Exception:
+            return False
+
+    def save_data(self):
+        with open(self.path, "w") as f:
+            json.dump(self.json_dict, f, indent=4)
 
 
 
-file = Jsonparser("config.json")
+
+# file = Jsonparser("config.json")
 # print(file.json_str)
 # print(file.json_dict)
 # print(file.sorted_board)
