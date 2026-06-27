@@ -53,13 +53,25 @@ class Game:
         self.score = 0
 
     def main_menu(self) -> None:
+        """
+            Draw the main menu and wait for user input.
+
+            From this screen, the user can start the game,
+            show the scoreboard, or show the controls of the game.
+        """
+
         btn_Xstart = int(self.x_size * 0.45)
         btn_Ystart = int(self.y_size * 0.4)
+
         play_button = pygame.Rect(btn_Xstart, btn_Ystart, 300, 75)
         score_button = pygame.Rect(btn_Xstart, btn_Ystart + 120, 300, 75)
         cont_button = pygame.Rect(btn_Xstart, btn_Ystart + 240, 300, 75)
-        pac_image = pygame.image.load("resources/Pacman_HD.png").convert_alpha()
+
+        pac_image = (pygame.image.load("resources/Pacman_HD.png")
+                     .convert_alpha()
+                     )
         pac_image_rect = pac_image.get_rect()
+
         red_ghost = pygame.image.load("resources/redgb.png").convert_alpha()
         blue_ghost = pygame.image.load("resources/bluegb.jpeg").convert_alpha()
 
@@ -100,8 +112,9 @@ class Game:
 
             title_1 = self.title_font.render("Pac", True, "yellow")
             title_2 = self.title_font.render("an", True, "yellow")
+
             tit1_h, _ = title_1.get_size()
-            tit2_h, _ = title_2.get_size()
+
             play_text = self.btnfont.render("Start Game", True,
                                             self.white_col)
             score_text = self.btnfont.render("Score board", True,
@@ -125,8 +138,18 @@ class Game:
             self.screen.blit(title_2, (start, 50))
             pygame.display.flip()
 
-    def ghost_dir(self, grid: list[list], anchor: tuple,
+    def ghost_dir(self, grid: list[list[str]], anchor: tuple[int, int],
                   ghost_rect: list[pygame.Rect]) -> list[tuple[int, int]]:
+        """
+            Determine the direction of each ghost.
+
+            Args:
+                grid: informs which walls are open in every maze cell.
+                anchor: a tuple indicating the topleft position of the maze.
+                ghost_rectd: a list of ghosts' rectangles.
+            Returns:
+                list[tuple[int, int]]: list of ghosts' speeds
+        """
 
         speeds = []
         for ghost in ghost_rect:
@@ -159,6 +182,15 @@ class Game:
     def ghost(self, ghost_rect: list[pygame.Rect],
               ghost_surf: list[pygame.Surface],
               speeds: list[tuple[int, int]]) -> None:
+        """
+            Move all ghosts in the specified directions and display them.
+
+            Args:
+                ghost_rect: contains rectangles of all ghosts
+                ghost_surf: contains surfaces of all ghosts
+                speeds: contains each ghosts movement direction.
+        """
+
         for index, ghost in enumerate(ghost_rect):
             if ghost:
                 speed = speeds[index]
@@ -166,14 +198,25 @@ class Game:
                 ghost.topleft = (ghost.x + x_speed, ghost.y + y_speed)
                 self.screen.blit(ghost_surf[index], ghost)
 
-    def pacgum(self, grid):
+    def pacgum(self, grid: list[list[str]]) -> list[list[bool]]:
+        """
+            Determine the distribution of all pacgums in the maze.
+
+            Args:
+                grid: informs which walls are open in every maze cell.
+            Returns:
+                list[list[bool]]: informs which cells contain a pacgum.
+        """
+
         num = self.parser.json_dict["pacgum"]
         gum_grid = []
         for x in range(15):
             gum_grid.append([])
             for y in range(15):
                 gum_grid[x].append(False)
+
         cells = []
+        # Deteremine all cells that can accommodate pacgums.
         for x in range(15):
             for y in range(15):
                 if (x == 0 and y == 14):
@@ -191,16 +234,30 @@ class Game:
                 if grid[y][x] == "1111":
                     continue
                 cells.append((x, y))
+
+        # Pick a random set out all of valid cells to put pacgums.
         gum_pos = random.sample(cells, k=num)
         for gum in gum_pos:
             gum_grid[gum[1]][gum[0]] = True
         return gum_grid
 
-    def draw_pacgum(self, anchor: tuple[int, int], gum_grid: list[list[bool]]) -> None:
-        pacgum_surf = pygame.image.load("pacman-art/other/dot.png").convert_alpha()
+    def draw_pacgum(self, anchor: tuple[int, int],
+                    gum_grid: list[list[bool]]) -> None:
+        """
+            Draw all pacgums and super pacgums accross the maze.
+
+            Args:
+                anchor: a tuple indicating the topleft position of the maze.
+                gum_grid: a list showing the distribution of pacgums
+                    accross the maze.
+        """
+
+        pacgum_surf = (pygame.image
+                       .load("pacman-art/other/dot.png").convert_alpha())
         pacgum_rect = pacgum_surf.get_rect()
 
-        app_surf = pygame.image.load("pacman-art/other/apple.png").convert_alpha()
+        app_surf = (pygame.image
+                    .load("pacman-art/other/apple.png").convert_alpha())
 
         for y, row in enumerate(gum_grid):
             for x, cell in enumerate(row):
@@ -213,8 +270,17 @@ class Game:
                     else:
                         self.screen.blit(pacgum_surf, pacgum_rect)
 
-    def pacman(self, lev_no: str = 1,
-               cheat_mode: bool = False):
+    def pacman(self, lev_no: str = 1, cheat_mode: bool = False):
+        """
+            Draw Pacman and all ghosts and control their movement.
+
+            Pacman's movement is determined by user keyboard input, whilst
+            ghosts movement is determined randomly.
+
+            Args:
+                lev_no: Level's number from 1 to 10.
+                cheat_mode: if True, the player will have special abilities.
+        """
 
         maze = MazeGenerator()
         maze.generate()
@@ -236,18 +302,28 @@ class Game:
         spawn = (x + 32 * 7, y + 32 * 6)
         mov_dir = None
 
-        ghst_1surf = pygame.image.load("pacman-art/ghosts/blinky.png").convert_alpha()
-        ghst_2surf = pygame.image.load("pacman-art/ghosts/clyde.png").convert_alpha()
-        ghst_3surf = pygame.image.load("pacman-art/ghosts/inky.png").convert_alpha()
-        ghst_4surf = pygame.image.load("pacman-art/ghosts/pinky.png").convert_alpha()
-        ghst_5surf = pygame.image.load("pacman-art/ghosts/blue_ghost.png").convert_alpha()
-
+        ghst_1surf = (pygame.image.load("pacman-art/ghosts/blinky.png")
+                      .convert_alpha()
+                      )
+        ghst_2surf = (pygame.image.load("pacman-art/ghosts/clyde.png")
+                      .convert_alpha()
+                      )
+        ghst_3surf = (pygame.image.load("pacman-art/ghosts/inky.png")
+                      .convert_alpha()
+                      )
+        ghst_4surf = (pygame.image.load("pacman-art/ghosts/pinky.png")
+                      .convert_alpha()
+                      )
+        ghst_5surf = (pygame.image.load("pacman-art/ghosts/blue_ghost.png")
+                      .convert_alpha()
+                      )
+        # respawn points
         ghst1_res = (anchor[0] + 8, anchor[1] + 8)
         ghst2_res = (anchor[0] + (32 * (maze._width - 1)) + 8, anchor[1] + 8)
         ghst3_res = (anchor[0] + 8, anchor[1] + 32 * (maze._height - 1) + 8)
         ghst4_res = (anchor[0] + (32 * (maze._width - 1)) + 8, anchor[1] + (32 * (maze._height - 1)) + 8)
-
         ghost_res = [ghst1_res, ghst2_res, ghst3_res, ghst4_res]
+
         ghst_1rect = ghst_1surf.get_rect(topleft=ghst1_res)
         ghst_2rect = ghst_2surf.get_rect(topleft=ghst2_res)
         ghst_3rect = ghst_3surf.get_rect(topleft=ghst3_res)
@@ -274,6 +350,7 @@ class Game:
                     if event.key == pygame.K_4:
                         pygame.quit()
                         sys.exit()
+                    # To determine the direction of pacman's movement
                     if event.key == pygame.K_UP:
                         mov_dir = Dir.UP
                     elif event.key == pygame.K_DOWN:
@@ -282,6 +359,9 @@ class Game:
                         mov_dir = Dir.RIGHT
                     elif event.key == pygame.K_LEFT:
                         mov_dir = Dir.LEFT
+
+            # Ensures that pacman doesn't move unless the corresponding
+            # direction is open
             if (((spawn[0] + x_pac - anchor[0]) % 32 == 8) and
                     (spawn[1] + y_pac - anchor[1]) % 32 == 8):
                 x_cell = (spawn[1] + y_pac - anchor[1]) // 32
@@ -303,6 +383,7 @@ class Game:
                     x_spd = 0
                     y_spd = -1
 
+            # Determine to where Pacman's face is pointed
             match pac_dir:
                 case Dir.UP:
                     pac_dir_img = "up"
@@ -313,19 +394,27 @@ class Game:
                 case Dir.LEFT:
                     pac_dir_img = "left"
 
+            # Creating Pacman's Animation
             match pac_state:
                 case 0:
-                    pacman_surf = pygame.image.load(f"pacman-art/pacman-{pac_dir_img}/1.png").convert_alpha()
+                    pacman_surf = (pygame.image.load
+                                   (f"pacman-art/pacman-{pac_dir_img}/1.png")
+                                   .convert_alpha())
                 case 6:
-                    pacman_surf = pygame.image.load(f"pacman-art/pacman-{pac_dir_img}/2.png").convert_alpha()
+                    pacman_surf = (pygame.image.load
+                                   (f"pacman-art/pacman-{pac_dir_img}/2.png")
+                                   .convert_alpha())
                 case 12:
-                    pacman_surf = pygame.image.load(f"pacman-art/pacman-{pac_dir_img}/3.png").convert_alpha()
+                    pacman_surf = (pygame.image.load
+                                   (f"pacman-art/pacman-{pac_dir_img}/3.png")
+                                   .convert_alpha())
             pac_state = (pac_state + 1) % 13
             pacman_rect = pacman_surf.get_rect()
 
+            # Check whether or not pacman has came across a pacgum
+            # or a super pacgum and increases score accordingly
             if (((spawn[0] + x_pac - anchor[0]) % 32 == 8) and
                     (spawn[1] + y_pac - anchor[1]) % 32 == 8):
-                
                 x_cell = (spawn[1] + y_pac - anchor[1]) // 32
                 y_cell = (spawn[0] + x_pac - anchor[0]) // 32
                 if gum_grid[x_cell][y_cell]:
@@ -334,13 +423,17 @@ class Game:
                        (x_cell == 0 and y_cell == 14)
                        or (x_cell == 14 and y_cell == 0)
                        or (x_cell == 14 and y_cell == 14)):
-                        self.score += self.parser.json_dict["points_per_super_pacgum"]
+                        self.score += (self.parser
+                                       .json_dict["points_per_super_pacgum"])
                         super_time = pygame.time.get_ticks()
                         super_pac = True
-                        ghost_surf = [ghst_5surf, ghst_5surf, ghst_5surf, ghst_5surf] 
+                        ghost_surf = [ghst_5surf, ghst_5surf, ghst_5surf, ghst_5surf]
                     else:
-                        self.score += self.parser.json_dict["points_per_pacgum"]
+                        self.score += (self.parser
+                                       .json_dict["points_per_pacgum"])
 
+                # Prevent pacman from advancing if the path is closed
+                # in the movement direction
                 if pac_dir == Dir.LEFT and grid[x_cell][y_cell][0] == "1":
                     x_spd = 0
                     y_spd = 0
@@ -353,28 +446,34 @@ class Game:
                 elif pac_dir == Dir.UP and grid[x_cell][y_cell][3] == "1":
                     x_spd = 0
                     y_spd = 0
+
+            # Update the position of Pacman
             x_pac += x_spd
             y_pac += y_spd
+            pacman_rect.topleft = (spawn[0] + x_pac,
+                                   spawn[1] + y_pac)
 
+            # Check whether time of the super state has ended.
             curr_time = pygame.time.get_ticks()
             if (curr_time - super_time) > 10000:
                 super_pac = False
                 ghost_surf = [ghst_1surf, ghst_2surf, ghst_3surf, ghst_4surf]
 
-            pacman_rect.topleft = (spawn[0] + x_pac,
-                                   spawn[1] + y_pac)
+            # Upon Pacman's collision with a ghost, the score increases if
+            # super state was active, if otherwise, the player loses a life.
             for index, ghost in enumerate(ghost_rect):
                 if ghost:
                     if collideRect(pacman_rect, ghost):
                         if super_pac:
                             ghost_rect[index] = None
-                            self.score += self.parser.json_dict["points_per_ghost"]
+                            self.score += (self.parser
+                                           .json_dict["points_per_ghost"])
                             ghost_time[index] = pygame.time.get_ticks()
                         elif not cheat_mode:
                             self.parser.json_dict["lives"] -= 1
                             if self.parser.json_dict["lives"] == 0:
                                 pass
-                                #game_over()
+                                # game_over()
                             else:
                                 x_pac = 8
                                 y_pac = 8
@@ -382,23 +481,36 @@ class Game:
                                 x_spd = 0
                                 y_spd = 0
 
+            # Revert back every ghost that spent over 5 seconds
+            # in the fearful state.
             for index, time in enumerate(ghost_time):
                 if time:
                     if (curr_time - time) > 5000:
                         ghost_time[index] = None
-                        ghost_rect[index] = ghost_surf[index].get_rect(topleft=ghost_res[index])
-
-            self.screen.blit(pacman_surf, pacman_rect)
+                        ghost_rect[index] = (ghost_surf[index].
+                                             get_rect(topleft=ghost_res[index])
+                                             )
+            # Changes direction of ghosts every 32 frames.
             if not (ghost_c % 32):
                 speeds = self.ghost_dir(grid, anchor, ghost_rect)
             ghost_c = (ghost_c + 1) % 32
+
+            # Display ghosts and Pacman on the screen.
             self.ghost(ghost_rect, ghost_surf, speeds)
+            self.screen.blit(pacman_surf, pacman_rect)
+
             clock.tick(60)
             pygame.display.flip()
 
     def level(self, anchor: tuple[int, int], grid: list[list]) -> None:
-        #lev_name, lev_size = self.parser.json_dict["levels&size"][level_number - 1]
-        #print(lev_size)
+        """
+            Draw the maze represented in the grid.
+
+            Args:
+                anchor: a tuple representing the topleft position
+                    of the maze.
+                grid: a list of lists representing the open and closed walls.
+        """
         score = self.title_font.render(str(self.score), True, "yellow")
         self.screen.fill("#003049")
         self.screen.blit(score, score.get_rect(topleft=(0, 0)))
@@ -445,22 +557,12 @@ class Game:
             y += 1
 
 
-
-
-
-
-
-
-def main_screen():
+def main():
+    """Start the UI flow"""
 
     game = Game()
-    while True:
-        #game.pacman()
-        game.main_menu()
-        pygame.display.flip()
-
+    game.main_menu()
 
 
 if __name__ == "__main__":
-    main_screen()
-
+    main()
