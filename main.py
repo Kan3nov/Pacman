@@ -80,8 +80,9 @@ class Game:
         blue_ghost = pygame.image.load("resources/bluegb.jpeg").convert_alpha()
         resized_redG = pygame.transform.scale(red_ghost, (175, 175))
         resized_blueG = pygame.transform.scale(blue_ghost, (175, 175))
+    
+        top_player_rect = pygame.Rect(50, 350, 100, 50)
         audio = True
-
         while True:
             mouse = pygame.mouse.get_pos()
             for event in pygame.event.get():
@@ -97,6 +98,8 @@ class Game:
                             self.pacman(lev, True)
                     elif collidePoint(cont_button, mouse):
                         self.controls()
+                    elif collidePoint(score_button, mouse):
+                        self.score_board()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_4:
                         pygame.quit()
@@ -120,11 +123,6 @@ class Game:
                  else self.pressed_btn),
                 cont_button)
 
-            title_1 = self.title_font.render("Pac", True, "yellow")
-            title_2 = self.title_font.render("an", True, "yellow")
-
-            tit1_h, _ = title_1.get_size()
-
             play_text = self.btnfont.render("Start Game", True,
                                             self.white_col)
             score_text = self.btnfont.render("Scoreboard", True,
@@ -136,17 +134,26 @@ class Game:
             self.screen.blit(score_text, (btn_Xstart + 30, btn_Ystart + 145))
             self.screen.blit(cont_text, (btn_Xstart + 50, btn_Ystart + 265))
 
-            start = 500
-            self.screen.blit(pac_image, pac_rect)
-            start += 201
-            self.screen.blit(title_1, (start, 50))
-            start += tit1_h + 2
-            self.screen.blit(resized_redG, (start, 50))
-            start += 176
-            self.screen.blit(resized_blueG, (start, 50))
-            start += 176
-            self.screen.blit(title_2, (start, 50))
+            self.blit_logo(pac_image, resized_redG, resized_blueG)
+            self.show_top_players(rect=top_player_rect)
             pygame.display.flip()
+
+    def blit_logo(self, pac_image: pygame.surface, resized_redG: pygame.surface,
+                  resized_blueG: pygame.surface):
+        pac_rect = pac_image.get_rect(topleft=(500, 50))
+        title_1 = self.title_font.render("Pac", True, "yellow")
+        title_2 = self.title_font.render("an", True, "yellow")
+        tit1_h, _ = title_1.get_size()
+        start = 500
+        self.screen.blit(pac_image, pac_rect)
+        start += 201
+        self.screen.blit(title_1, (start, 50))
+        start += tit1_h + 2
+        self.screen.blit(resized_redG, (start, 50))
+        start += 176
+        self.screen.blit(resized_blueG, (start, 50))
+        start += 176
+        self.screen.blit(title_2, (start, 50))
 
     def ghost_dir(self, grid: list[list[str]], anchor: tuple[int, int],
                   ghost_rect: list[pygame.Rect]) -> list[tuple[int, int]]:
@@ -309,6 +316,7 @@ class Game:
         save_btn_txt = self.btnfont.render("Save", True,
                                            "white")
         save_btn_txt_rect = save_btn_txt.get_rect(topleft=(1110, 255))
+        save_btn_is_clicked = False
 
         msg1 = ("Enter your username: ")
         msg1_surf = self.btnfont.render(msg1, True, "#94A3B8")
@@ -340,7 +348,8 @@ class Game:
                     elif collidePoint(menu_btn, mouse):
                         self.score = 0
                         self.main_menu()
-                    elif collidePoint(save_btn, mouse):
+                    elif (collidePoint(save_btn, mouse)
+                          and not save_btn_is_clicked):
                         if (username.count(" ") == len(username)):
                             error_msg = (error_font
                                          .render("Usernames should " +
@@ -358,6 +367,7 @@ class Game:
                                 error_msg = (error_font
                                              .render("Result Saved!",
                                                      None, "white"))
+                                save_btn_is_clicked = True
                     else:
                         box_color = no_highlight
                         key_input = False
@@ -523,6 +533,62 @@ class Game:
                     if (collidePoint(x_rect, mouse_pos)):
                         self.main_menu()
             pygame.display.flip()
+    
+    def show_top_players(self, rect: pygame.Rect, top_n: int = 3) -> None:
+        if top_n > 10:
+            top_n = 10
+        top_palyers = list(self.parser.sorted_board.items())
+
+        title_rect = rect
+        m_font = pygame.font.SysFont(None, 50)
+        tilte = self.btnfont.render("Top player score", None, "white")
+        y_start = title_rect.y + 75
+        self.screen.blit(tilte, title_rect)
+        index = 1
+        x_size, y_size = title_rect.size
+        for name, score in top_palyers[:top_n]:
+            text_msg = f"{index}. {name} - {score}"
+            text = m_font.render(text_msg, None, "red")
+            index += 1
+            record_rect = pygame.Rect(rect.x + 30, y_start, x_size - 25, y_size - 25)
+            self.screen.blit(text, record_rect)
+            y_start += 45
+        pygame.display.flip()
+
+    def score_board(self):
+        pac_image = (pygame.image.load("resources/Pacman_HD.png")
+                     .convert_alpha()
+                     )
+        pac_image = pygame.transform.scale(pac_image, (200, 200))
+        red_ghost = pygame.image.load("resources/redgb.png").convert_alpha()
+        blue_ghost = pygame.image.load("resources/bluegb.jpeg").convert_alpha()
+        resized_redG = pygame.transform.scale(red_ghost, (175, 175))
+        resized_blueG = pygame.transform.scale(blue_ghost, (175, 175))
+        top_players_rect = pygame.Rect(850, 300, 150, 75)
+        menu_btn = pygame.Rect(900 , 875, 240, 60)
+        menu_btn_txt = self.btnfont.render("main menu", True,
+                                           "white")
+        self.screen.fill("black")
+        while True:
+            mouse = pygame.mouse.get_pos()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if collidePoint(menu_btn, mouse):
+                        self.main_menu()
+            self.blit_logo(pac_image, resized_redG, resized_blueG)
+            self.show_top_players(rect=top_players_rect, top_n=10)
+            pygame.draw.rect(
+                self.screen,
+                (self.unpressed_btn if collidePoint(menu_btn, mouse)
+                 else self.pressed_btn),
+                menu_btn)
+            self.screen.blit(menu_btn_txt, (menu_btn.x + 10, menu_btn.y + 10))
+
+            
+
 
     def pacman(self, lev_no: int = 1, cheat_mode: bool = False,
                audio: bool = False) -> None:
