@@ -277,94 +277,120 @@ class Game:
         highlight = "white"
         no_highlight = "gray"
         key_input = False
-        error_font = pygame.font.Font(None, 12)
-        
-        menu_btn = pygame.Rect(1960 // 2 - 100, 1960 // 2 - 600, 150, 85)
+        clock = pygame.time.Clock()
+        error_font = pygame.sysfont.SysFont(None, 20)
+        error_msg = error_font.render("", True, "red")
+
+        txt_box = pygame.Rect(800, 250, 280, 50)
+
+        menu_btn = pygame.Rect(1920 // 2 - 100, 1080 - 600, 150, 85)
         menu_btn_txt = self.btnfont.render("menu", True,
                                            self.white_col)
 
-        txt_box = pygame.Rect(1960 // 2 - 100, 1960 // 2 - 400, 280, 85)
+        save_btn = pygame.Rect(1100, 250, 120, 50)
+        save_btn_txt = self.btnfont.render("Save", True,
+                                           self.white_col)
+        save_btn_txt_rect = save_btn_txt.get_rect(topleft=(1110, 255))
+
+        msg1 = ("Enter your username: ")
+        msg1_surf = self.btnfont.render(msg1, True, "white")
+
         box_color = no_highlight
 
         while True:
-            self.screen.fill("blue")
-               
+            self.screen.fill("#0F172A")
+
             if (win):
                 msg = self.btnfont.render("Congratulations!", None, "green")
-                msg_rect = msg.get_rect(topleft=(1960 // 2, 100))
-                self.screen.blit(msg, msg_rect)
             else:
                 msg = self.btnfont.render("You lost", None, "red")
-                msg_rect = msg.get_rect(topleft=(1960 // 2, 100))
-                self.screen.blit(msg, msg_rect)
-            score = self.btnfont.render(f"Score: {self.score}", None, "red")
-            score_rect = score.get_rect(topleft=(1960 // 2, 200))
-            self.screen.blit(score, score_rect)
+
             mouse = pygame.mouse.get_pos()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 1:
-                        if collidePoint(txt_box, mouse):
-                            box_color = highlight
-                            key_input = True
-                        elif collidePoint(menu_btn, mouse):
-                            if len(username) > 10 or username.count(" ") > 1:
-                                error_msg = error_font.render("Fix the name first", None, "red")
-                                error_rect = error_msg.get_rect(topleft=(1960 // 2 - 100, 1080 // 2 - 350))
-                                self.screen.blit(error_msg, error_rect)
-                            elif (len(username) > 0 and
-                                    username.count(" ") != len(username)):
-                                if self.parser.check_names(username):
-                                    error_msg = error_font.render("The name is exist", None, "red")
-                                    error_rect = error_msg.get_rect(topleft=(1960 // 2 - 100, 1080 // 2 - 350))
-                                    self.screen.blit(error_msg, error_rect)
-                                else:
-                                    self.parser.update_board([username, self.score])
-                                    self.main_menu()
-                            elif len(username) == 0:
-                                self.main_menu()
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    if collidePoint(txt_box, mouse):
+                        box_color = highlight
+                        key_input = True
+                    elif collidePoint(menu_btn, mouse):
+                        self.main_menu()
+                    elif collidePoint(save_btn, mouse):
+                        if (username.count(" ") == len(username)):
+                            error_msg = (error_font
+                                         .render("Usernames should " +
+                                                 "contain at least one " +
+                                                 "alphanumeric character",
+                                                 None, "red"))
                         else:
-                            box_color = no_highlight
-                            key_input = False
+                            if self.parser.check_names(username):
+                                error_msg = (error_font
+                                             .render("The name does exist",
+                                                     None, "red"))
+                            else:
+                                self.parser.update_board([username, self.score])
+                                error_msg = (error_font
+                                             .render("Result Saved!",
+                                                     None, "white"))
+                    else:
+                        box_color = no_highlight
+                        key_input = False
+
                 if event.type == pygame.KEYDOWN and key_input:
                     if ((str(event.unicode).isalnum() or
                             str(event.unicode) == " ") and
                             len(username) < 10):
                         username += str(event.unicode)
+                        error_msg = error_font.render("", True, "red")
                     elif event.key == pygame.K_BACKSPACE:
                         username = username[: -1]
-                    if (username.count(" ") == len(username)
-                            and len(username) > 0):
-                        error_msg = error_font.render("Usernames should " +
-                                                     "contain at least one " +
-                                                     "alphanumeric character", None, "red")
-                        error_rect = error_msg.get_rect(topleft=(1960 // 2 - 100, 1080 // 2 - 350))
-                        self.screen.blit(error_msg, error_rect)
-                    elif (len(username) == 10):
-                        error_msg = error_font.render("Usernames shouldn't " +
-                                                      "exceed 10 characters", None, "red")
-                        error_rect = error_msg.get_rect(topleft=(1960 // 2 - 100, 1080 // 2 - 350))
-                        self.screen.blit(error_msg, error_rect)
-            
+                        error_msg = error_font.render("", True, "red")
+                    elif len(username) == 10:
+                        error_msg = error_font.render("Usernames cannot " +
+                                                      "exceed 10 characters",
+                                                      True,
+                                                      "red")
+
             pygame.draw.rect(
                 self.screen,
                 (self.unpressed_btn if collidePoint(menu_btn, mouse)
                  else self.pressed_btn),
                 menu_btn)
+            self.screen.blit(menu_btn_txt, (menu_btn.x + 10, menu_btn.y + 10))
+
             pygame.draw.rect(
                 self.screen,
                 box_color,
                 txt_box
             )
-            username_surf = self.btnfont.render(username, True, "red")
-            self.screen.blit(username_surf, (txt_box.x + 15, txt_box.y + 15))
-            self.screen.blit(menu_btn_txt, (menu_btn.x + 10, menu_btn.y + 10))
-            self.screen.blit(score, score_rect)
-            pygame.display.flip()
 
+            pygame.draw.rect(
+                self.screen,
+                (self.unpressed_btn if collidePoint(save_btn, mouse)
+                 else self.pressed_btn),
+                save_btn)
+
+            self.screen.blit(save_btn_txt, save_btn_txt_rect)
+
+            msg_rect = msg.get_rect(topleft=(1920 // 2 - 100, 100))
+            self.screen.blit(msg, msg_rect)
+            pygame.draw.line(self.screen, "red", (800, 150), (1100, 150))
+
+            msg1_rect = msg1_surf.get_rect(topleft=(340, 250))
+            self.screen.blit(msg1_surf, msg1_rect)
+
+            score = self.btnfont.render(f"Score: {self.score}", None, "yellow")
+            score_rect = score.get_rect(topleft=(1920 // 2 - 100, 200))
+            self.screen.blit(score, score_rect)
+
+            username_surf = self.btnfont.render(username, True, "#282424")
+            self.screen.blit(username_surf, (txt_box.x, txt_box.y + 15))
+
+            self.screen.blit(error_msg, (800, 310))
+
+            clock.tick(60)
+            pygame.display.flip()
 
     def pacman(self, lev_no: str = 1, cheat_mode: bool = False):
         """
@@ -392,7 +418,7 @@ class Game:
         pac_dir = Dir.RIGHT
         speeds = []
 
-        x = (1960 - maze._width * 32) // 2
+        x = (1920 - maze._width * 32) // 2
         y = (1080 - maze._height * 32) // 2
         anchor = (x, y)
         spawn = (x + 32 * 7, y + 32 * 6)
@@ -671,7 +697,8 @@ def main():
     """Start the UI flow"""
 
     game = Game()
-    game.main_menu()
+    game.gameover(False)
+    #game.main_menu()
 
 
 if __name__ == "__main__":
