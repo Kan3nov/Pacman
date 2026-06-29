@@ -1,4 +1,5 @@
 import pygame
+from typing import Optional
 import sys
 from enum import Enum
 from mazegenerator.mazegenerator import MazeGenerator
@@ -47,6 +48,7 @@ class Game:
         self.pressed_btn = (253, 216, 53)
         self.unpressed_btn = (251, 192, 45)
         self.white_col = (255, 255, 255)
+        self.smallfont = pygame.font.SysFont(None, 30)
         self.btnfont = pygame.font.SysFont(None, 60)
         self.title_font = pygame.font.SysFont(None, 200)
         self.parser = Jsonparser("config.json")
@@ -408,6 +410,60 @@ class Game:
             clock.tick(60)
             pygame.display.flip()
 
+    def pause(self) -> Optional[int]:
+        time1 = pygame.time.get_ticks()
+        while True:
+            mouse_pos = pygame.mouse.get_pos()
+
+            frame = pygame.Rect(0, 0, 600, 200)
+            frame.center = (1920 // 2, 400)
+            pygame.draw.rect(self.screen, "#0F172A", frame)
+            pygame.draw.rect(self.screen, "white", frame, 1)
+
+            txt1 = self.btnfont.render("Paused", True, "#94A3B8")
+            txt1_rect = txt1.get_rect(center=(frame.midtop[0], frame.top + 30))
+            self.screen.blit(txt1, txt1_rect)
+
+            menu_btn = pygame.Rect(frame.left + 30,
+                                   frame.bottom - 100,
+                                   120, 40)
+            menu_txt = self.smallfont.render("Main Menu", True, "white")
+            pygame.draw.rect(self.screen,
+                             self.pressed_btn
+                             if collidePoint(menu_btn, mouse_pos)
+                             else self.unpressed_btn, menu_btn)
+            self.screen.blit(menu_txt, (menu_btn.left + 5,
+                                        menu_btn.bottom - 30))
+
+            resume_btn = pygame.Rect(frame.right - 200,
+                                     frame.bottom - 100,
+                                     93, 40)
+
+            resume_txt = self.smallfont.render("Resume", True, "white")
+            pygame.draw.rect(self.screen,
+                             self.pressed_btn
+                             if collidePoint(resume_btn, mouse_pos)
+                             else self.unpressed_btn, resume_btn)
+            self.screen.blit(resume_txt, (resume_btn.left + 5,
+                                          resume_btn.bottom - 30))
+
+            pygame.display.flip()
+            for e in pygame.event.get():
+                if e.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if e.type == pygame.KEYDOWN:
+                    if e.key == pygame.K_4:
+                        pygame.quit()
+                        sys.exit()
+                if e.type == pygame.MOUSEBUTTONUP:
+                    if e.button == 1 and collidePoint(menu_btn, mouse_pos):
+                        self.main_menu()
+                    if e.button == 1 and collidePoint(resume_btn,
+                                                      mouse_pos):
+                        time2 = pygame.time.get_ticks()
+                        return time2 - time1
+
     def pacman(self, lev_no: str = 1, cheat_mode: bool = False):
         """
             Draw Pacman and all ghosts and control their movement.
@@ -482,23 +538,6 @@ class Game:
         while True:
             self.level(anchor, grid)
             self.draw_pacgum(anchor, gum_grid)
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_4:
-                        pygame.quit()
-                        sys.exit()
-                    # To determine the direction of pacman's movement
-                    if event.key == pygame.K_UP:
-                        mov_dir = Dir.UP
-                    elif event.key == pygame.K_DOWN:
-                        mov_dir = Dir.DOWN
-                    elif event.key == pygame.K_RIGHT:
-                        mov_dir = Dir.RIGHT
-                    elif event.key == pygame.K_LEFT:
-                        mov_dir = Dir.LEFT
 
             # Displays the level number
             level_txt = self.btnfont.render(f"Level {lev_no}/10", True,
@@ -654,6 +693,31 @@ class Game:
             self.ghost(ghost_rect, ghost_surf, speeds)
             self.screen.blit(pacman_surf, pacman_rect)
 
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_4:
+                        pygame.quit()
+                        sys.exit()
+                    if event.key == pygame.K_ESCAPE:
+                        time = self.pause()
+                        if (super_time):
+                            super_time += time
+                        for t in ghost_time:
+                            if t:
+                                t += time
+                    # To determine the direction of pacman's movement
+                    if event.key == pygame.K_UP:
+                        mov_dir = Dir.UP
+                    elif event.key == pygame.K_DOWN:
+                        mov_dir = Dir.DOWN
+                    elif event.key == pygame.K_RIGHT:
+                        mov_dir = Dir.RIGHT
+                    elif event.key == pygame.K_LEFT:
+                        mov_dir = Dir.LEFT
+
             clock.tick(60)
             pygame.display.flip()
 
@@ -716,7 +780,6 @@ def main():
     """Start the UI flow"""
 
     game = Game()
-    game.gameover(False)
     game.main_menu()
 
 
