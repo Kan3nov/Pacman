@@ -2,7 +2,7 @@ import pygame
 from typing import Optional
 import sys
 from enum import Enum
-from mazegenerator.mazegenerator import MazeGenerator
+from mazegenerator.mazegenerator import MazeGenerator  # type: ignore
 from parser import Jsonparser
 import random
 
@@ -80,7 +80,7 @@ class Game:
         blue_ghost = pygame.image.load("resources/bluegb.jpeg").convert_alpha()
         resized_redG = pygame.transform.scale(red_ghost, (175, 175))
         resized_blueG = pygame.transform.scale(blue_ghost, (175, 175))
-    
+
         top_player_rect = pygame.Rect(50, 350, 100, 50)
         audio = True
         while True:
@@ -138,8 +138,8 @@ class Game:
             self.show_top_players(rect=top_player_rect)
             pygame.display.flip()
 
-    def blit_logo(self, pac_image: pygame.surface, resized_redG: pygame.surface,
-                  resized_blueG: pygame.surface):
+    def blit_logo(self, pac_image: pygame.Surface,
+                  resized_redG: pygame.Surface, resized_blueG: pygame.Surface):
         pac_rect = pac_image.get_rect(topleft=(500, 50))
         title_1 = self.title_font.render("Pac", True, "yellow")
         title_2 = self.title_font.render("an", True, "yellow")
@@ -155,8 +155,10 @@ class Game:
         start += 176
         self.screen.blit(title_2, (start, 50))
 
-    def ghost_dir(self, grid: list[list[str]], anchor: tuple[int, int],
-                  ghost_rect: list[pygame.Rect]) -> list[tuple[int, int]]:
+    def ghost_dir(
+            self,
+            grid: list[list[str]], anchor: tuple[int, int],
+            ghost_rect: list[pygame.Rect | None]) -> list[tuple[int, int]]:
         """
             Determine the direction of each ghost.
 
@@ -196,7 +198,7 @@ class Game:
                 speeds.append((0, 0))
         return speeds
 
-    def ghost(self, ghost_rect: list[pygame.Rect],
+    def ghost(self, ghost_rect: list[pygame.Rect | None],
               ghost_surf: list[pygame.Surface],
               speeds: list[tuple[int, int]]) -> None:
         """
@@ -226,7 +228,7 @@ class Game:
         """
 
         num = self.parser.json_dict["pacgum"]
-        gum_grid = []
+        gum_grid: list[list[bool]] = []
         for x in range(15):
             gum_grid.append([])
             for y in range(15):
@@ -327,9 +329,9 @@ class Game:
             self.screen.fill("#0F172A")
 
             if (win):
-                msg = self.btnfont.render("Congratulations!", None, "yellow")
+                msg = self.btnfont.render("Congratulations!", False, "yellow")
             else:
-                msg = self.btnfont.render("You lost", None, "#EF4444")
+                msg = self.btnfont.render("You lost", False, "#EF4444")
 
             mouse = pygame.mouse.get_pos()
             for event in pygame.event.get():
@@ -415,7 +417,7 @@ class Game:
             msg1_rect = msg1_surf.get_rect(topleft=(340, 250))
             self.screen.blit(msg1_surf, msg1_rect)
 
-            score = self.btnfont.render(f"Score: {self.score}", None,
+            score = self.btnfont.render(f"Score: {self.score}", False,
                                         self.pressed_btn)
             score_rect = score.get_rect(topleft=(1920 // 2 - 100, 200))
             self.screen.blit(score, score_rect)
@@ -533,7 +535,7 @@ class Game:
                     if (collidePoint(x_rect, mouse_pos)):
                         self.main_menu()
             pygame.display.flip()
-    
+
     def show_top_players(self, rect: pygame.Rect, top_n: int = 3) -> None:
         if top_n > 10:
             top_n = 10
@@ -541,31 +543,31 @@ class Game:
 
         title_rect = rect
         m_font = pygame.font.SysFont(None, 50)
-        tilte = self.btnfont.render("Top player score", None, "white")
+        tilte = self.btnfont.render("Top player score", False, "white")
         y_start = title_rect.y + 75
         self.screen.blit(tilte, title_rect)
         index = 1
         x_size, y_size = title_rect.size
         for name, score in top_palyers[:top_n]:
             text_msg = f"{index}. {name} - {score}"
-            text = m_font.render(text_msg, None, "red")
+            text = m_font.render(text_msg, False, "red")
             index += 1
-            record_rect = pygame.Rect(rect.x + 30, y_start, x_size - 25, y_size - 25)
+            record_rect = pygame.Rect(rect.x + 30, y_start, x_size - 25,
+                                      y_size - 25)
             self.screen.blit(text, record_rect)
             y_start += 45
         pygame.display.flip()
 
     def score_board(self):
         pac_image = (pygame.image.load("resources/Pacman_HD.png")
-                     .convert_alpha()
-                     )
+                     .convert_alpha())
         pac_image = pygame.transform.scale(pac_image, (200, 200))
         red_ghost = pygame.image.load("resources/redgb.png").convert_alpha()
         blue_ghost = pygame.image.load("resources/bluegb.jpeg").convert_alpha()
         resized_redG = pygame.transform.scale(red_ghost, (175, 175))
         resized_blueG = pygame.transform.scale(blue_ghost, (175, 175))
         top_players_rect = pygame.Rect(850, 300, 150, 75)
-        menu_btn = pygame.Rect(900 , 875, 240, 60)
+        menu_btn = pygame.Rect(900, 875, 240, 60)
         menu_btn_txt = self.btnfont.render("main menu", True,
                                            "white")
         self.screen.fill("black")
@@ -586,9 +588,6 @@ class Game:
                  else self.pressed_btn),
                 menu_btn)
             self.screen.blit(menu_btn_txt, (menu_btn.x + 10, menu_btn.y + 10))
-
-            
-
 
     def pacman(self, lev_no: int = 1, cheat_mode: bool = False,
                audio: bool = False) -> None:
@@ -654,8 +653,9 @@ class Game:
         ghst_4rect = ghst_4surf.get_rect(topleft=ghst4_res)
 
         ghost_surf = [ghst_1surf, ghst_2surf, ghst_3surf, ghst_4surf]
-        ghost_rect = [ghst_1rect, ghst_2rect, ghst_3rect, ghst_4rect]
-        ghost_time = [None, None, None, None]
+        ghost_rect: list[pygame.Rect | None] = [ghst_1rect, ghst_2rect,
+                                                ghst_3rect, ghst_4rect]
+        ghost_time: list[None | int] = [None, None, None, None]
 
         super_pac = False
         super_time = 0
@@ -882,11 +882,14 @@ class Game:
                     if event.key == pygame.K_ESCAPE:
                         time = self.pause()
                         if (super_time):
-                            super_time += time
+                            if time:
+                                super_time += time
                         for t in ghost_time:
                             if t:
-                                t += time
-                        rem_time += time
+                                if time:
+                                    t += time
+                        if time:
+                            rem_time += time
                     # To determine the direction of pacman's movement
                     if event.key == pygame.K_UP:
                         mov_dir = Dir.UP

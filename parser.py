@@ -54,7 +54,7 @@ class Jsonparser:
 
     def update_board(self, score_list: list[str | int]) -> None:
 
-        min_key = min(self.sorted_board, key=self.sorted_board.get)
+        min_key = min(self.sorted_board, key=lambda k: self.sorted_board[k])
 
         if self.sorted_board[min_key] > score_list[1]:
             return
