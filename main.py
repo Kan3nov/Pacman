@@ -73,11 +73,14 @@ class Game:
         pac_image = (pygame.image.load("resources/Pacman_HD.png")
                      .convert_alpha()
                      )
-        pac_image_rect = pac_image.get_rect()
+        pac_image = pygame.transform.scale(pac_image, (200, 200))
+        pac_rect = pac_image.get_rect(topleft=(500, 50))
 
         red_ghost = pygame.image.load("resources/redgb.png").convert_alpha()
         blue_ghost = pygame.image.load("resources/bluegb.jpeg").convert_alpha()
-        audio = False
+        resized_redG = pygame.transform.scale(red_ghost, (175, 175))
+        resized_blueG = pygame.transform.scale(blue_ghost, (175, 175))
+        audio = True
 
         while True:
             mouse = pygame.mouse.get_pos()
@@ -89,7 +92,7 @@ class Game:
                     if collidePoint(play_button, mouse):
                         for lev in range(1, 11):
                             self.pacman(lev, audio=audio)
-                    elif collidePoint(pac_image_rect, mouse):
+                    elif collidePoint(pac_rect, mouse):
                         for lev in range(1, 11):
                             self.pacman(lev, True)
                     elif collidePoint(cont_button, mouse):
@@ -100,10 +103,6 @@ class Game:
                         sys.exit()
 
             self.screen.fill((0, 0, 0))
-
-            resized_redG = pygame.transform.scale(red_ghost, (175, 175))
-            resized_blueG = pygame.transform.scale(blue_ghost, (175, 175))
-            resized_pac = pygame.transform.scale(pac_image, (200, 200))
 
             pygame.draw.rect(
                 self.screen,
@@ -138,7 +137,7 @@ class Game:
             self.screen.blit(cont_text, (btn_Xstart + 50, btn_Ystart + 265))
 
             start = 500
-            self.screen.blit(resized_pac, (start, 50))
+            self.screen.blit(pac_image, pac_rect)
             start += 201
             self.screen.blit(title_1, (start, 50))
             start += tit1_h + 2
@@ -476,7 +475,7 @@ class Game:
 
     def controls(self):
 
-        frame = pygame.Rect(0, 0, 600, 800)
+        frame = pygame.Rect(0, 0, 600, 400)
         frame.center = (self.x_size // 2, self.y_size // 2)
 
         title = self.btnfont.render("Controls", True, "#94A3B8")
@@ -496,7 +495,7 @@ class Game:
         x2 = pygame.image.load("resources/x2.png").convert_alpha()
 
         while True:
-            inst_rect.y = 200
+            inst_rect.y = title_rect.bottom + 20
             mouse_pos = pygame.mouse.get_pos()
 
             pygame.draw.rect(self.screen, "#0F172A", frame)
@@ -510,7 +509,7 @@ class Game:
 
             for i in inst:
                 inst_txt = self.smallfont.render(i, True, "#94A3B8")
-                inst_rect.y += 20
+                inst_rect.y += 40
                 self.screen.blit(inst_txt, inst_rect)
             for e in pygame.event.get():
                 if e.type == pygame.QUIT:
@@ -526,7 +525,7 @@ class Game:
             pygame.display.flip()
 
     def pacman(self, lev_no: int = 1, cheat_mode: bool = False,
-               audio: bool = True) -> None:
+               audio: bool = False) -> None:
         """
             Draw Pacman and all ghosts and control their movement.
 
@@ -901,7 +900,7 @@ def main():
     pygame.mixer.init()
     game.main_menu()
     # except Exception as e:
-    #print("Error: ", e)
+    # print("Error: ", e)
 
 
 if __name__ == "__main__":

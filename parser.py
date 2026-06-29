@@ -10,10 +10,10 @@ class Jsonparser:
             self.json_dict = json.loads(self.json_str)
             self.defaults_filled(self.json_dict)
         self.score_boards_file = self.json_dict["highscore_filename"]
-        with open(self.score_boards_file, "r")as f:
+        with open(self.score_boards_file, "r") as f:
             score_dict = json.load(f)
             self.sorted_board = dict(sorted(score_dict.items(),
-                                     key=lambda item: -item[1]))
+                                     key=lambda item: item[1], reverse=True))
 
     @staticmethod
     def del_comment(json_str: str):
@@ -48,11 +48,11 @@ class Jsonparser:
                 if json_dict[item] is not None and json_dict[item] != "":
                     pass
                 else:
-                    raise KeyError(f"item {item} does not has a value")
+                    raise KeyError(f"item {item} does not have a value")
             except KeyError:
                 json_dict[item] = defaults[item]
 
-    def update_board(self, score_list: list[str: int]) -> None:
+    def update_board(self, score_list: list[str | int]) -> None:
 
         min_key = min(self.sorted_board, key=self.sorted_board.get)
 
@@ -72,8 +72,8 @@ class Jsonparser:
             return False
 
     def save_data(self):
-        with open(self.path, "w") as f:
-            json.dump(self.json_dict, f, indent=4)
+        with open(self.score_boards_file, "w") as f:
+            json.dump(self.sorted_board, f, indent=4)
 # file = Jsonparser("config.json")
 # print(file.json_str)
 # print(file.json_dict)
