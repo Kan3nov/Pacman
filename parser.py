@@ -30,10 +30,10 @@ class Jsonparser:
                     need = True
                     continue
         return cleand_str
-    
+
     @staticmethod
     def defaults_filled(json_dict: dict):
-        defualts = {
+        defaults = {
             "highscore_filename": "score_board.json",
             "lives": 3,
             "pacgum": 42,
@@ -43,14 +43,14 @@ class Jsonparser:
             "seed": 42,
             "level_max_time": 90
         }
-        for item in defualts.keys():
+        for item in defaults.keys():
             try:
                 if json_dict[item] is not None and json_dict[item] != "":
                     pass
                 else:
                     raise KeyError(f"item {item} does not has a value")
             except KeyError:
-                json_dict[item] = defualts[item]
+                json_dict[item] = defaults[item]
 
     def update_board(self, score_list: list[str: int]) -> None:
 
@@ -74,10 +74,6 @@ class Jsonparser:
     def save_data(self):
         with open(self.path, "w") as f:
             json.dump(self.json_dict, f, indent=4)
-
-
-
-
 # file = Jsonparser("config.json")
 # print(file.json_str)
 # print(file.json_dict)
