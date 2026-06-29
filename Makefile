@@ -1,21 +1,22 @@
-SCRIPT = a_maze_ing.py
+SCRIPT = main.py
 
-all: run clean
+all: env install run clean
 
 clean:
 	@rm -rf .mypy_cache __pycache__ tempCodeRunnerFile.py
 
 install:
-	@pip install mazegenerator-00001-py3-none-any.whl
-	@pip install flake8
-	@pip install mypy
-	@pip install pygame
+	@.env/bin/pip install mazegenerator-00001-py3-none-any.whl
+	@.env/bin/pip install flake8
+	@.env/bin/pip install mypy
+	@.env/bin/pip install pygame
+	@.env/bin/pip install build
 
 run:
-	@python3 $(SCRIPT)
+	@.env/bin/python3 $(SCRIPT)
 
 debug:
-	@python -m pdb $(SCRIPT)
+	@.env/bin/python -m pdb $(SCRIPT)
 
 lint:
 	@flake8 . && mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs

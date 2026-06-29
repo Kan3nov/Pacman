@@ -62,6 +62,7 @@ class Game:
             show the scoreboard, or show the controls of the game.
         """
 
+        self.parser = Jsonparser("config.json")
         btn_Xstart = int(self.x_size * 0.45)
         btn_Ystart = int(self.y_size * 0.4)
 
@@ -76,6 +77,7 @@ class Game:
 
         red_ghost = pygame.image.load("resources/redgb.png").convert_alpha()
         blue_ghost = pygame.image.load("resources/bluegb.jpeg").convert_alpha()
+        audio = False
 
         while True:
             mouse = pygame.mouse.get_pos()
@@ -86,11 +88,17 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if collidePoint(play_button, mouse):
                         for lev in range(1, 11):
-                            self.pacman(lev)
-                    if collidePoint(pac_image_rect, mouse):
+                            self.pacman(lev, audio=audio)
+                    elif collidePoint(pac_image_rect, mouse):
                         for lev in range(1, 11):
                             self.pacman(lev, True)
-                            self.gameover(True)
+                    elif collidePoint(cont_button, mouse):
+                        self.controls()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_4:
+                        pygame.quit()
+                        sys.exit()
+
             self.screen.fill((0, 0, 0))
 
             resized_redG = pygame.transform.scale(red_ghost, (175, 175))
@@ -120,7 +128,7 @@ class Game:
 
             play_text = self.btnfont.render("Start Game", True,
                                             self.white_col)
-            score_text = self.btnfont.render("Score board", True,
+            score_text = self.btnfont.render("Scoreboard", True,
                                              self.white_col)
             cont_text = self.btnfont.render("Controls", True,
                                             self.white_col)
@@ -331,6 +339,7 @@ class Game:
                         box_color = highlight
                         key_input = True
                     elif collidePoint(menu_btn, mouse):
+                        self.score = 0
                         self.main_menu()
                     elif collidePoint(save_btn, mouse):
                         if (username.count(" ") == len(username)):
@@ -390,7 +399,7 @@ class Game:
 
             self.screen.blit(save_btn_txt, save_btn_txt_rect)
 
-            msg_rect = msg.get_rect(topleft=(1920 // 2 - 100, 100))
+            msg_rect = msg.get_rect(center=(960, 120))
             self.screen.blit(msg, msg_rect)
             pygame.draw.line(self.screen, "#EF4444", (800, 150), (1100, 150))
 
@@ -456,15 +465,68 @@ class Game:
                     if e.key == pygame.K_4:
                         pygame.quit()
                         sys.exit()
-                if e.type == pygame.MOUSEBUTTONUP:
+                if e.type == pygame.MOUSEBUTTONDOWN:
                     if e.button == 1 and collidePoint(menu_btn, mouse_pos):
+                        self.score = 0
                         self.main_menu()
                     if e.button == 1 and collidePoint(resume_btn,
                                                       mouse_pos):
                         time2 = pygame.time.get_ticks()
                         return time2 - time1
 
-    def pacman(self, lev_no: str = 1, cheat_mode: bool = False):
+    def controls(self):
+
+        frame = pygame.Rect(0, 0, 600, 800)
+        frame.center = (self.x_size // 2, self.y_size // 2)
+
+        title = self.btnfont.render("Controls", True, "#94A3B8")
+        title_rect = title.get_rect(center=(frame.midtop[0],
+                                            frame.top + 30))
+
+        inst = ["Move Up: Up Arrow", "Move Down: Down Arrow",
+                "Move Left: Left Arrow", "Move Right: Right Arrown",
+                "Pause: Esc", "Level Skip: l"]
+        inst_txt = self.smallfont.render("", True, "#94A3B8")
+        inst_rect = inst_txt.get_rect(topleft=(title_rect.x,
+                                               title_rect.y + 200))
+
+        x1 = pygame.image.load("resources/x1.png").convert_alpha()
+        x_rect = x1.get_rect(topright=frame.topright)
+
+        x2 = pygame.image.load("resources/x2.png").convert_alpha()
+
+        while True:
+            inst_rect.y = 200
+            mouse_pos = pygame.mouse.get_pos()
+
+            pygame.draw.rect(self.screen, "#0F172A", frame)
+            pygame.draw.rect(self.screen, "white", frame, 1)
+            self.screen.blit(title, title_rect)
+
+            if (collidePoint(x_rect, mouse_pos)):
+                self.screen.blit(x2, x_rect)
+            else:
+                self.screen.blit(x1, x_rect)
+
+            for i in inst:
+                inst_txt = self.smallfont.render(i, True, "#94A3B8")
+                inst_rect.y += 20
+                self.screen.blit(inst_txt, inst_rect)
+            for e in pygame.event.get():
+                if e.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if e.type == pygame.KEYDOWN:
+                    if e.key == pygame.K_4:
+                        pygame.quit()
+                        sys.exit()
+                if e.type == pygame.MOUSEBUTTONDOWN:
+                    if (collidePoint(x_rect, mouse_pos)):
+                        self.main_menu()
+            pygame.display.flip()
+
+    def pacman(self, lev_no: int = 1, cheat_mode: bool = False,
+               audio: bool = True) -> None:
         """
             Draw Pacman and all ghosts and control their movement.
 
@@ -475,9 +537,10 @@ class Game:
                 lev_no: Level's number from 1 to 10.
                 cheat_mode: if True, the player will have special abilities.
         """
-
-        maze = MazeGenerator()
-        maze.generate()
+        if lev_no == 1:
+            maze = MazeGenerator(seed=42)
+        else:
+            maze = MazeGenerator()
         grid = [[dec_to_bin(y, 4) for y in x] for x in maze.maze]
 
         x_spd = 0
@@ -535,7 +598,14 @@ class Game:
         gum_grid = self.pacgum(grid)
 
         clock = pygame.time.Clock()
+        rem_time = pygame.time.get_ticks()
+        max_time = self.parser.json_dict["level_max_time"] * 1000
+
+        lives = self.parser.json_dict["lives"]
+
+        time_txt = self.smallfont.render("", True, "white")
         while True:
+            lives_txt = self.btnfont.render(f"Lives: {lives}", True, "white")
             self.level(anchor, grid)
             self.draw_pacgum(anchor, gum_grid)
 
@@ -555,18 +625,30 @@ class Game:
                     pac_dir = Dir.LEFT
                     x_spd = -1
                     y_spd = 0
+                    if (cheat_mode):
+                        x_spd *= 2
+                        y_spd *= 2
                 elif mov_dir == Dir.DOWN and grid[x_cell][y_cell][1] == "0":
                     pac_dir = Dir.DOWN
                     x_spd = 0
                     y_spd = 1
+                    if (cheat_mode):
+                        x_spd *= 2
+                        y_spd *= 2
                 elif mov_dir == Dir.RIGHT and grid[x_cell][y_cell][2] == "0":
                     pac_dir = Dir.RIGHT
                     x_spd = 1
                     y_spd = 0
+                    if (cheat_mode):
+                        x_spd *= 2
+                        y_spd *= 2
                 elif mov_dir == Dir.UP and grid[x_cell][y_cell][3] == "0":
                     pac_dir = Dir.UP
                     x_spd = 0
                     y_spd = -1
+                    if (cheat_mode):
+                        x_spd *= 2
+                        y_spd *= 2
 
             # Determine to where Pacman's face is pointed
             match pac_dir:
@@ -618,6 +700,9 @@ class Game:
                     else:
                         self.score += (self.parser
                                        .json_dict["points_per_pacgum"])
+                        pygame.mixer.music.load("audio/munch.mp3")
+                        pygame.mixer.music.set_volume(0.7)
+                        pygame.mixer.music.play()
 
                 # Prevent pacman from advancing if the path is closed
                 # in the movement direction
@@ -634,13 +719,15 @@ class Game:
                     x_spd = 0
                     y_spd = 0
 
+            # Move to next level of all pacgums have been collected.
             pacgum_num = 0
             for row in gum_grid:
                 pacgum_num += sum(row)
-            if (pacgum_num <= 0):
-                if (lev_no >= 10):
+            if pacgum_num <= 0:
+                if lev_no >= 10:
                     self.gameover(True)
-                break
+                if 1 <= lev_no < 10:
+                    break
 
             # Update the position of Pacman
             x_pac += x_spd
@@ -648,9 +735,25 @@ class Game:
             pacman_rect.topleft = (spawn[0] + x_pac,
                                    spawn[1] + y_pac)
 
+            # Display the remaning time
+            cur_time = pygame.time.get_ticks()
+            time_txt = (self.btnfont
+                        .render("Time: " +
+                                f"{(max_time - cur_time + rem_time) // 1000}s",
+                                True,
+                                "white"))
+            self.screen.blit(time_txt, (0, level_rect.bottom + 100))
+
+            # Check whether time of the level has ended.
+            if (cur_time - rem_time >= max_time):
+                if (cheat_mode):
+                    rem_time = pygame.time.get_ticks()
+                else:
+                    self.gameover(False)
+
+            self.screen.blit(lives_txt, (0, level_rect.bottom + 200))
             # Check whether time of the super state has ended.
-            curr_time = pygame.time.get_ticks()
-            if (curr_time - super_time) > 10000:
+            if (cur_time - super_time) > 10000:
                 super_pac = False
                 ghost_surf = [ghst_1surf, ghst_2surf, ghst_3surf, ghst_4surf]
 
@@ -664,22 +767,32 @@ class Game:
                             self.score += (self.parser
                                            .json_dict["points_per_ghost"])
                             ghost_time[index] = pygame.time.get_ticks()
+                            pygame.mixer.music.load("audio/numnum.mp3")
+                            pygame.mixer.music.set_volume(0.7)
+                            pygame.mixer.music.play()
                         elif not cheat_mode:
                             self.parser.json_dict["lives"] -= 1
+                            lives -= 1
                             if self.parser.json_dict["lives"] <= 0:
+                                pygame.mixer.music.load("audio/get-out.mp3")
+                                pygame.mixer.music.set_volume(0.7)
+                                pygame.mixer.music.play()
                                 self.gameover(False)
-                            else:
+                            else:  # If pacman got remaining lives
                                 x_pac = 8
                                 y_pac = 8
                                 mov_dir = None
                                 x_spd = 0
                                 y_spd = 0
+                                pygame.mixer.music.load("audio/ack.mp3")
+                                pygame.mixer.music.set_volume(0.7)
+                                pygame.mixer.music.play()
 
             # Revert back every ghost that spent over 5 seconds
             # in the fearful state.
             for index, time in enumerate(ghost_time):
                 if time:
-                    if (curr_time - time) > 5000:
+                    if (cur_time - time) > 5000:
                         ghost_time[index] = None
                         ghost_rect[index] = (ghost_surf[index].
                                              get_rect(topleft=ghost_res[index])
@@ -708,6 +821,7 @@ class Game:
                         for t in ghost_time:
                             if t:
                                 t += time
+                        rem_time += time
                     # To determine the direction of pacman's movement
                     if event.key == pygame.K_UP:
                         mov_dir = Dir.UP
@@ -717,6 +831,10 @@ class Game:
                         mov_dir = Dir.RIGHT
                     elif event.key == pygame.K_LEFT:
                         mov_dir = Dir.LEFT
+                    elif event.key == pygame.K_l and cheat_mode:
+                        if lev_no >= 10:
+                            self.gameover(True)
+                        return
 
             clock.tick(60)
             pygame.display.flip()
@@ -778,9 +896,12 @@ class Game:
 
 def main():
     """Start the UI flow"""
-
+    # try:
     game = Game()
+    pygame.mixer.init()
     game.main_menu()
+    # except Exception as e:
+    #print("Error: ", e)
 
 
 if __name__ == "__main__":
