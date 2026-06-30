@@ -3,7 +3,7 @@ from typing import Optional
 import sys
 from enum import Enum
 from mazegenerator.mazegenerator import MazeGenerator
-from parser import Jsonparser
+from .parser import Jsonparser
 import random
 from queue import Queue
 
