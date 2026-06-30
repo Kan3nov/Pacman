@@ -2,7 +2,7 @@ import pygame
 from typing import Optional
 import sys
 from enum import Enum
-from mazegenerator.mazegenerator import MazeGenerator  # type: ignore
+from mazegenerator.mazegenerator import MazeGenerator
 from parser import Jsonparser
 import random
 

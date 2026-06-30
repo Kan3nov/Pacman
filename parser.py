@@ -15,8 +15,7 @@ class Jsonparser:
             self.sorted_board = dict(sorted(score_dict.items(),
                                      key=lambda item: item[1], reverse=True))
 
-    @staticmethod
-    def del_comment(json_str: str):
+    def del_comment(self, json_str: str):
         cleand_str = ""
         need = False
         lines_json = json_str.split("\n")
@@ -24,12 +23,58 @@ class Jsonparser:
             if ":" in line:
                 need = False
             if not need:
-                if not line.strip()[0] == "#":
-                    cleand_str += line
-                else:
-                    need = True
-                    continue
-        return cleand_str
+                if len(line.strip()) != 0:
+                    if not line.strip()[0] == "#":
+                        cleand_str += line
+                    else:
+                        need = True
+                        continue
+        return self.validate_config(cleand_str)
+    
+    @staticmethod
+    def check(key: str, value: str) -> str:
+        defaults = {
+            "highscore_filename": str,
+            "lives": 1,
+            "pacgum": 1,
+            "points_per_pacgum": 1,
+            "points_per_super_pacgum": 1,
+            "points_per_ghost": 1,
+            "seed": 1,
+            "level_max_time": 1
+        }
+        if key not in defaults.keys():
+            return ""
+        if isinstance(defaults[key], int):
+            try:
+                _ = int(value)
+                return f'"{key}":{value},'
+            except Exception:
+                return ""
+        else:
+            if value[0] == '"' and value.endswith('.json"'):
+                return f'"{key}":{value},'
+            return ""
+
+
+    def validate_config(self, s: str) -> str:
+        if s.strip()[0] != "{" or s.strip()[-1] != "}":
+            return "{}"
+        s = s.split(",")
+        cleaned_str = "{"
+        for pair in s:
+            if pair[0] == "{":
+                pair = pair[1:]
+            if pair[-1] == "}":
+                pair = pair[:-1]
+            key, value = pair.split(":")
+            key = key.strip(" \"")
+            value = value.strip(" ")
+
+            cleaned_str += self.check(key, value)
+        cleaned_str = cleaned_str[:-1] + "}"
+        return cleaned_str
+        
 
     @staticmethod
     def defaults_filled(json_dict: dict):
@@ -37,7 +82,7 @@ class Jsonparser:
             "highscore_filename": "score_board.json",
             "lives": 3,
             "pacgum": 42,
-            "": 10,
+            "points_per_pacgum":10,
             "points_per_super_pacgum": 50,
             "points_per_ghost": 200,
             "seed": 42,
@@ -45,11 +90,10 @@ class Jsonparser:
         }
         for item in defaults.keys():
             try:
-                if json_dict[item] is not None and json_dict[item] != "":
-                    pass
-                else:
-                    raise KeyError(f"item {item} does not have a value")
-            except KeyError:
+                if item not in json_dict.keys():
+                    raise Exception(f"key {item} does not exist or has invalid value, resorting to default value")
+            except Exception as e:
+                print(f"Error: {str(e)}")
                 json_dict[item] = defaults[item]
 
     def update_board(self, score_list: list[str | int]) -> None:
@@ -74,7 +118,7 @@ class Jsonparser:
     def save_data(self):
         with open(self.score_boards_file, "w") as f:
             json.dump(self.sorted_board, f, indent=4)
-# file = Jsonparser("config.json")
+file = Jsonparser("config.json")
 # print(file.json_str)
-# print(file.json_dict)
+print(file.json_dict)
 # print(file.sorted_board)

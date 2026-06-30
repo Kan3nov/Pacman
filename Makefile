@@ -5,15 +5,15 @@ all: env install run clean
 clean:
 	@rm -rf .mypy_cache __pycache__ tempCodeRunnerFile.py
 
+run:
+	@.env/bin/python3 $(SCRIPT)
+
 install:
 	@.env/bin/pip install mazegenerator-00001-py3-none-any.whl
 	@.env/bin/pip install flake8
 	@.env/bin/pip install mypy
 	@.env/bin/pip install pygame
 	@.env/bin/pip install build
-
-run:
-	@.env/bin/python3 $(SCRIPT)
 
 debug:
 	@.env/bin/python -m pdb $(SCRIPT)
@@ -26,3 +26,4 @@ lint-strict:
 
 env:
 	@python -m venv .env
+	
