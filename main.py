@@ -5,7 +5,7 @@ from enum import Enum
 from mazegenerator.mazegenerator import MazeGenerator
 from parser import Jsonparser
 import random
-
+from queue import Queue
 
 class Dir(Enum):
     UP = 0
@@ -155,10 +155,56 @@ class Game:
         start += 176
         self.screen.blit(title_2, (start, 50))
 
+    def get_acc(self, grid: list[list[str]], dir_grid: list[list[str]],
+                cell: tuple[int, int]) -> list[tuple[int, int]]:
+        acc = []
+        if grid[cell[1]][cell[0]][0] == "0": # West
+            new = (cell[0] - 1, cell[1])
+            acc.append(new)
+            dir_grid[new[1]][new[0]] += "E"
+        if grid[cell[1]][cell[0]][1] == "0": # South
+            new = (cell[0], cell[1] + 1)
+            acc.append(new)
+            dir_grid[new[1]][new[0]] += "N"
+        if grid[cell[1]][cell[0]][2] == "0": # East
+            new = (cell[0] + 1, cell[1])
+            acc.append(new)
+            dir_grid[new[1]][new[0]] += "W"
+        if grid[cell[1]][cell[0]][3] == "0": # North
+            new = (cell[0], cell[1] - 1)
+            acc.append(new)
+            dir_grid[new[1]][new[0]] += "S"
+        return acc
+
+    def bfs(self, grid:list[list[str]], entry: tuple[int, int],
+            exit: tuple[int, int]) -> int:
+        dir_grid = []
+        for row in range(15):
+            dir_grid.append([])
+            for _ in range(15):
+                dir_grid[row].append("")
+        q = Queue()
+        dir_grid[entry[1]][entry[0]] = ""
+        visited = set()
+        q.put(entry)
+        while not q.empty():
+            cur: tuple[int, int] = q.get()
+            if (cur == exit):
+                print("exit: ", dir_grid[exit[1]][exit[0]][1:])
+                return dir_grid[exit[1]][exit[0]][1:]
+            for n in self.get_acc(grid, dir_grid, cur):
+                if n not in visited:
+                    print("unvisited")
+                    q.put(n)
+                    visited.add(n)
+        print(dir_grid)
+        return "exit not found"
+
     def ghost_dir(
             self,
             grid: list[list[str]], anchor: tuple[int, int],
-            ghost_rect: list[pygame.Rect | None]) -> list[tuple[int, int]]:
+            ghost_rect: list[pygame.Rect | None],
+            pac_pos: tuple[int, int]) -> list[tuple[int, int]]:
         """
             Determine the direction of each ghost.
 
@@ -171,10 +217,26 @@ class Game:
         """
 
         speeds = []
-        for ghost in ghost_rect:
+        for idx, ghost in enumerate(ghost_rect):
             if ghost:
                 x_cell = (ghost.x - anchor[0]) // 32
                 y_cell = (ghost.y - anchor[1]) // 32
+                if not idx:
+                    path = self.bfs(grid, (x_cell, y_cell), pac_pos)
+                    print(path)
+                    match path[0]:
+                        case "N":
+                            speeds.append((0, -1))
+                        case "E":
+                            speeds.append((1, 0))
+                        case "S":
+                            speeds.append((0, 1))
+                        case "W":
+                            speeds.append((-1, 0))
+                        case _:
+                            speeds.append((0, 0))
+                    continue
+
                 cell = grid[y_cell][x_cell]
                 open_paths = []
                 if cell[0] == "0":
@@ -864,7 +926,7 @@ class Game:
                                              )
             # Changes direction of ghosts every 32 frames.
             if not (ghost_c % 32):
-                speeds = self.ghost_dir(grid, anchor, ghost_rect)
+                speeds = self.ghost_dir(grid, anchor, ghost_rect, (x_cell, y_cell))
             ghost_c = (ghost_c + 1) % 32
 
             # Display ghosts and Pacman on the screen.
