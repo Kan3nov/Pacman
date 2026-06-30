@@ -83,7 +83,6 @@ class Game:
         resized_blueG = pygame.transform.scale(blue_ghost, (175, 175))
 
         top_player_rect = pygame.Rect(50, 350, 100, 50)
-        audio = True
         while True:
             mouse = pygame.mouse.get_pos()
             for event in pygame.event.get():
@@ -93,7 +92,7 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if collidePoint(play_button, mouse):
                         for lev in range(1, 11):
-                            self.pacman(lev, audio=audio)
+                            self.pacman(lev) 
                     elif collidePoint(pac_rect, mouse):
                         for lev in range(1, 11):
                             self.pacman(lev, True)
@@ -106,7 +105,7 @@ class Game:
                         pygame.quit()
                         sys.exit()
 
-            self.screen.fill((0, 0, 0))
+            self.screen.fill("#0F172A")
 
             pygame.draw.rect(
                 self.screen,
@@ -159,19 +158,23 @@ class Game:
     def get_acc(self, grid: list[list[str]], dir_grid: list[list[str]],
                 cell: tuple[int, int]) -> list[tuple[int, int]]:
         acc = []
-        if grid[cell[1]][cell[0]][0] == "0" and dir_grid[cell[1]][cell[0]][-1] != "E":  # West
+        if (grid[cell[1]][cell[0]][0] == "0"
+                and dir_grid[cell[1]][cell[0]][-1] != "E"):  # West
             new = (cell[0] - 1, cell[1])
             acc.append(new)
             dir_grid[new[1]][new[0]] = dir_grid[cell[1]][cell[0]] + "W"
-        if grid[cell[1]][cell[0]][1] == "0" and dir_grid[cell[1]][cell[0]][-1] != "N":  # South
+        if (grid[cell[1]][cell[0]][1] == "0"
+                and dir_grid[cell[1]][cell[0]][-1] != "N"):  # South
             new = (cell[0], cell[1] + 1)
             acc.append(new)
             dir_grid[new[1]][new[0]] = dir_grid[cell[1]][cell[0]] + "S"
-        if grid[cell[1]][cell[0]][2] == "0" and dir_grid[cell[1]][cell[0]][-1] != "W":  # East
+        if (grid[cell[1]][cell[0]][2] == "0"
+                and dir_grid[cell[1]][cell[0]][-1] != "W"):  # East
             new = (cell[0] + 1, cell[1])
             acc.append(new)
             dir_grid[new[1]][new[0]] = dir_grid[cell[1]][cell[0]] + "E"
-        if grid[cell[1]][cell[0]][3] == "0" and dir_grid[cell[1]][cell[0]][-1] != "S":  # North
+        if (grid[cell[1]][cell[0]][3] == "0"
+                and dir_grid[cell[1]][cell[0]][-1] != "S"):  # North
             new = (cell[0], cell[1] - 1)
             acc.append(new)
             dir_grid[new[1]][new[0]] = dir_grid[cell[1]][cell[0]] + "N"
@@ -197,11 +200,15 @@ class Game:
                     visited.add(n)
         return "exit not found"
 
+    def compute_dist(self, c1: tuple[int, int], c2: tuple[int, int]):
+        return ((c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2) ** 0.5
+
     def ghost_dir(
             self,
             grid: list[list[str]], anchor: tuple[int, int],
             ghost_rect: list[pygame.Rect | None],
-            pac_pos: tuple[int, int]) -> list[tuple[int, int]]:
+            pac_pos: tuple[int, int],
+            superpac: bool = False) -> list[tuple[int, int]]:
         """
             Determine the direction of each ghost.
 
@@ -209,6 +216,7 @@ class Game:
                 grid: informs which walls are open in every maze cell.
                 anchor: a tuple indicating the topleft position of the maze.
                 ghost_rectd: a list of ghosts' rectangles.
+                pac_pos: position of Pacman in the format: (x, y)
             Returns:
                 list[tuple[int, int]]: list of ghosts' speeds
         """
@@ -218,7 +226,7 @@ class Game:
             if ghost:
                 x_cell = (ghost.x - anchor[0]) // 32
                 y_cell = (ghost.y - anchor[1]) // 32
-                if not idx:
+                if idx == 0 and not superpac:  # For chase behavior.
                     path = self.bfs(grid, (x_cell, y_cell), pac_pos)
                     match "X" if not path else path[0]:
                         case "N":
@@ -243,7 +251,23 @@ class Game:
                     open_paths.append(Dir.RIGHT)
                 if cell[3] == "0":
                     open_paths.append(Dir.UP)
-                next_path = random.choice(open_paths)
+                if superpac:
+                    dirs = []
+                    for dir in open_paths:
+                        if dir == Dir.UP:
+                            dirs.append((x_cell, y_cell - 1))
+                        elif dir == Dir.DOWN:
+                            dirs.append((x_cell, y_cell + 1))
+                        elif dir == Dir.RIGHT:
+                            dirs.append((x_cell + 1, y_cell))
+                        elif dir == Dir.LEFT:
+                            dirs.append((x_cell - 1, y_cell))
+                    next_cell = max(dirs,
+                                    key=lambda m: self.compute_dist(m,
+                                                                    pac_pos))
+                    next_path = open_paths[dirs.index(next_cell)]
+                else:
+                    next_path = random.choice(open_paths)
                 if next_path == Dir.UP:
                     speeds.append((0, -1))
                 elif next_path == Dir.DOWN:
@@ -357,6 +381,13 @@ class Game:
             Args:
                 win: defines the message to be displayed.
         """
+
+        if win:
+            pass
+        else:
+            pygame.mixer.music.load("audio/get-out.mp3")
+            pygame.mixer.music.set_volume(0.7)
+            pygame.mixer.music.play()
 
         username = ""
         highlight = "white"
@@ -647,8 +678,7 @@ class Game:
                 menu_btn)
             self.screen.blit(menu_btn_txt, (menu_btn.x + 10, menu_btn.y + 10))
 
-    def pacman(self, lev_no: int = 1, cheat_mode: bool = False,
-               audio: bool = False) -> None:
+    def pacman(self, lev_no: int = 1, cheat_mode: bool = False) -> None:
         """
             Draw Pacman and all ghosts and control their movement.
 
@@ -896,10 +926,14 @@ class Game:
                         elif not cheat_mode:
                             self.parser.json_dict["lives"] -= 1
                             lives -= 1
+                            for idx, rect in enumerate(ghost_rect):
+                                rect.topleft = ghost_res[idx]
+                            speeds = self.ghost_dir(grid, anchor, ghost_rect,
+                                                    (y_cell, x_cell),
+                                                    super_pac)
+                            print(speeds)
+
                             if self.parser.json_dict["lives"] <= 0:
-                                pygame.mixer.music.load("audio/get-out.mp3")
-                                pygame.mixer.music.set_volume(0.7)
-                                pygame.mixer.music.play()
                                 self.gameover(False)
                             else:  # If pacman got remaining lives
                                 x_pac = 8
@@ -922,7 +956,8 @@ class Game:
                                              )
             # Changes direction of ghosts every 32 frames.
             if not (ghost_c % 32):
-                speeds = self.ghost_dir(grid, anchor, ghost_rect, (y_cell, x_cell))
+                speeds = self.ghost_dir(grid, anchor, ghost_rect,
+                                        (y_cell, x_cell), super_pac)
             ghost_c = (ghost_c + 1) % 32
 
             # Display ghosts and Pacman on the screen.
