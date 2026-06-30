@@ -92,7 +92,7 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if collidePoint(play_button, mouse):
                         for lev in range(1, 11):
-                            self.pacman(lev) 
+                            self.pacman(lev)
                     elif collidePoint(pac_rect, mouse):
                         for lev in range(1, 11):
                             self.pacman(lev, True)
@@ -910,6 +910,12 @@ class Game:
                 super_pac = False
                 ghost_surf = [ghst_1surf, ghst_2surf, ghst_3surf, ghst_4surf]
 
+            # Changes direction of ghosts every 32 frames.
+            if not (ghost_c % 32):
+                speeds = self.ghost_dir(grid, anchor, ghost_rect,
+                                        (y_cell, x_cell), super_pac)
+            ghost_c = (ghost_c + 1) % 32
+
             # Upon Pacman's collision with a ghost, the score increases if
             # super state was active, if otherwise, the player loses a life.
             for index, ghost in enumerate(ghost_rect):
@@ -928,10 +934,7 @@ class Game:
                             lives -= 1
                             for idx, rect in enumerate(ghost_rect):
                                 rect.topleft = ghost_res[idx]
-                            speeds = self.ghost_dir(grid, anchor, ghost_rect,
-                                                    (y_cell, x_cell),
-                                                    super_pac)
-                            print(speeds)
+                            speeds = [(0, 0), (0, 0), (0, 0), (0, 0)]
 
                             if self.parser.json_dict["lives"] <= 0:
                                 self.gameover(False)
@@ -954,11 +957,6 @@ class Game:
                         ghost_rect[index] = (ghost_surf[index].
                                              get_rect(topleft=ghost_res[index])
                                              )
-            # Changes direction of ghosts every 32 frames.
-            if not (ghost_c % 32):
-                speeds = self.ghost_dir(grid, anchor, ghost_rect,
-                                        (y_cell, x_cell), super_pac)
-            ghost_c = (ghost_c + 1) % 32
 
             # Display ghosts and Pacman on the screen.
             self.ghost(ghost_rect, ghost_surf, speeds)
