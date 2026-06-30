@@ -56,7 +56,6 @@ class Jsonparser:
                 return f'"{key}":{value},'
             return ""
 
-
     def validate_config(self, s: str) -> str:
         if s.strip()[0] != "{" or s.strip()[-1] != "}":
             return "{}"
@@ -74,7 +73,6 @@ class Jsonparser:
             cleaned_str += self.check(key, value)
         cleaned_str = cleaned_str[:-1] + "}"
         return cleaned_str
-        
 
     @staticmethod
     def defaults_filled(json_dict: dict):
@@ -82,7 +80,7 @@ class Jsonparser:
             "highscore_filename": "score_board.json",
             "lives": 3,
             "pacgum": 42,
-            "points_per_pacgum":10,
+            "points_per_pacgum": 10,
             "points_per_super_pacgum": 50,
             "points_per_ghost": 200,
             "seed": 42,
@@ -91,7 +89,9 @@ class Jsonparser:
         for item in defaults.keys():
             try:
                 if item not in json_dict.keys():
-                    raise Exception(f"key {item} does not exist or has invalid value, resorting to default value")
+                    raise Exception(f"key {item} does not exist" +
+                                    "or has invalid value, " +
+                                    "resorting to default value")
             except Exception as e:
                 print(f"Error: {str(e)}")
                 json_dict[item] = defaults[item]
@@ -100,7 +100,12 @@ class Jsonparser:
 
         min_key = min(self.sorted_board, key=lambda k: self.sorted_board[k])
 
-        if self.sorted_board[min_key] > score_list[1]:
+        if len(self.sorted_board.keys()) < 10:
+            self.sorted_board[score_list[0]] = score_list[1]
+            self.save_data()
+            return
+
+        elif self.sorted_board[min_key] > score_list[1]:
             return
         else:
             self.sorted_board[score_list[0]] = score_list[1]
@@ -118,7 +123,3 @@ class Jsonparser:
     def save_data(self):
         with open(self.score_boards_file, "w") as f:
             json.dump(self.sorted_board, f, indent=4)
-file = Jsonparser("config.json")
-# print(file.json_str)
-print(file.json_dict)
-# print(file.sorted_board)

@@ -105,7 +105,7 @@ class Game:
                         pygame.quit()
                         sys.exit()
 
-            self.screen.fill("#0F172A")
+            self.screen.fill("#000000")
 
             pygame.draw.rect(
                 self.screen,
