@@ -30,7 +30,7 @@ class Jsonparser:
                         need = True
                         continue
         return self.validate_config(cleand_str)
-    
+
     @staticmethod
     def check(key: str, value: str) -> str:
         defaults = {
@@ -98,8 +98,9 @@ class Jsonparser:
 
     def update_board(self, score_list: list[str | int]) -> None:
 
-        min_key = min(self.sorted_board, key=lambda k: self.sorted_board[k])
-
+        if len(self.sorted_board):
+            min_key = min(self.sorted_board,
+                          key=lambda k: self.sorted_board[k])
         if len(self.sorted_board.keys()) < 10:
             self.sorted_board[score_list[0]] = score_list[1]
             self.save_data()

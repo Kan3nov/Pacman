@@ -397,7 +397,7 @@ class Game:
         error_font = pygame.sysfont.SysFont(None, 20)
         error_msg = error_font.render("", True, "#EF4444")
 
-        txt_box = pygame.Rect(800, 250, 280, 50)
+        txt_box = pygame.Rect(800, 250, 280, 60)
 
         menu_btn = pygame.Rect(1920 // 2 - 150, 1080 - 600, 240, 60)
         menu_btn_txt = self.btnfont.render("main menu", True,
