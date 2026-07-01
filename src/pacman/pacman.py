@@ -141,6 +141,14 @@ class Game:
     def blit_logo(self, pac_image: pygame.Surface,
                   resized_redG: pygame.Surface,
                   resized_blueG: pygame.Surface) -> None:
+        """
+            Draw the logo at the main menu.
+
+            Args:
+                pac_image: the surface of pacman image.
+                resized_redG: resized surface of the red ghost image.
+                resized_blueG: resized surface of the blue ghost image.
+        """
         pac_rect = pac_image.get_rect(topleft=(500, 50))
         title_1 = self.title_font.render("Pac", True, "yellow")
         title_2 = self.title_font.render("an", True, "yellow")
