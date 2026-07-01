@@ -36,13 +36,13 @@ class Jsonparser:
     def check(key: str, value: str) -> str:
         defaults = {
             "highscore_filename": str,
-            "lives": 1,
-            "pacgum": 1,
-            "points_per_pacgum": 1,
-            "points_per_super_pacgum": 1,
-            "points_per_ghost": 1,
-            "seed": 1,
-            "level_max_time": 1
+            "lives": 3,
+            "pacgum": 22,
+            "points_per_pacgum": 10,
+            "points_per_super_pacgum": 50,
+            "points_per_ghost": 200,
+            "seed": 42,
+            "level_max_time": 100
         }
         if key not in defaults.keys():
             return ""

@@ -16,6 +16,15 @@ class Dir(Enum):
 
 
 def dec_to_bin(dec: int, digs: int) -> str:
+    """converts a decimal integer to a binary string.
+
+    Args:
+        dec: the decimal number.
+        digs: the number of digits of the binary result.
+    Returns:
+        str: the number in binary.
+
+    """
     res = ""
     while digs > 0:
         res = str(dec & 1) + res
@@ -25,6 +34,14 @@ def dec_to_bin(dec: int, digs: int) -> str:
 
 
 def collidePoint(rect: pygame.Rect, point: tuple[int, int]) -> bool:
+    """check whether a point collides with a Rect.
+
+        Args:
+            rect
+            point
+        Returns:
+            bool: True if there's a collision, False otherwise.
+    """
     if rect.right >= point[0] >= rect.left:
         if rect.bottom >= point[1] >= rect.top:
             return True
@@ -32,6 +49,14 @@ def collidePoint(rect: pygame.Rect, point: tuple[int, int]) -> bool:
 
 
 def collideRect(rect1: pygame.Rect, rect2: pygame.Rect) -> bool:
+    """check whether the two Rectangles collide
+
+        Args:
+            rect1
+            rect2
+        Returns:
+            bool: True if the Rect's collide, False otherwise.
+    """
     if (rect1.left <= rect2.right and rect2.left <= rect1.right and
             rect1.top <= rect2.bottom and rect2.top <= rect1.bottom):
         return True
@@ -39,6 +64,21 @@ def collideRect(rect1: pygame.Rect, rect2: pygame.Rect) -> bool:
 
 
 class Game:
+    """The game engine which starts and ends the game.
+
+    Attributes:
+        x_size: the width of the window in pixels.
+        y_size: the height of the window in pixels.
+        screen: the window on which everything will be displayed.
+        pressed_btn: the color when no mouse is hovering on a button.
+        pressed_btn: the color when a mouse is hovering on a button.
+        white_col: white color
+        smallfont
+        btnfont
+        title_font
+        parser: used for getting game configurations from a file.
+        score
+    """
 
     def __init__(self) -> None:
         pygame.init()
@@ -166,6 +206,17 @@ class Game:
 
     def get_acc(self, grid: list[list[str]], dir_grid: list[list[str]],
                 cell: tuple[int, int]) -> list[tuple[int, int]]:
+        """
+            Return a list of all accessable neighbors of a specified cell
+
+            Args:
+                grid: informs which walls are open in every maze cell.
+                dir_grid: contains all paths from an entry cell to every
+                          other cell.
+                cell: the cell of which we return the neighbors.
+            Returns:
+                list[tuple[int, int]]: all neighboring cells.
+        """
         acc = []
         if (grid[cell[1]][cell[0]][0] == "0"
                 and dir_grid[cell[1]][cell[0]][-1] != "E"):  # West
@@ -191,6 +242,16 @@ class Game:
 
     def bfs(self, grid: list[list[str]], entry: tuple[int, int],
             exit: tuple[int, int]) -> str:
+        """
+            Find the shortest path from entry to exit using BFS.
+
+            Args:
+                grid: informs which walls are open in every maze cell.
+                entry: the cell from which the path begins
+                exit: the cell at which the path ends
+            Returns:
+                str: the path from entry to exit.
+        """
         dir_grid: list[list[str]] = []
         for row in range(15):
             dir_grid.append([])
@@ -211,6 +272,16 @@ class Game:
 
     def compute_dist(self, c1: tuple[int, int],
                      c2: tuple[int, int]) -> float:
+        """
+            Find the euclidean distance between two cells.
+
+            Args:
+                c1: the first cell
+                c2: the second cell
+            Returns:
+                float: distance.
+        """
+
         return float(((c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2) ** 0.5)
 
     def ghost_dir(
@@ -224,9 +295,9 @@ class Game:
 
             Args:
                 grid: informs which walls are open in every maze cell.
-                anchor: a tuple indicating the topleft position of the maze.
-                ghost_rectd: a list of ghosts' rectangles.
+                ghost_rect: a list of ghosts' rectangles.
                 pac_pos: position of Pacman in the format: (x, y)
+                superpac: the state of the player.
             Returns:
                 list[tuple[int, int]]: list of ghosts' speeds
         """
@@ -530,6 +601,15 @@ class Game:
             pygame.display.flip()
 
     def pause(self) -> Optional[int]:
+        """
+            Pause the game.
+
+            It enables the user to stop the game and gives him the ability
+            to return back to the main menu or to resume the game.
+
+            Returns:
+                Optional[int]: number of milleseconds the game was paused for.
+        """
         time1 = pygame.time.get_ticks()
         while True:
             mouse_pos = pygame.mouse.get_pos()
@@ -585,6 +665,12 @@ class Game:
                         return time2 - time1
 
     def controls(self) -> None:
+        """
+            Show the controls of the game.
+
+            It displays a lsit of all actions each with its
+            corresponding key binding
+        """
 
         frame = pygame.Rect(0, 0, 600, 400)
         frame.center = (self.x_size // 2, self.y_size // 2)
@@ -636,6 +722,14 @@ class Game:
             pygame.display.flip()
 
     def show_top_players(self, rect: pygame.Rect, top_n: int = 3) -> None:
+        """
+            Show the top n playes.
+
+            Args:
+                rect: the rect on which we will display the scoreboard.
+                top_n: specifies the number of names to display.
+        """
+
         if top_n > 10:
             top_n = 10
         top_palyers = list(self.parser.sorted_board.items())
@@ -658,6 +752,10 @@ class Game:
         pygame.display.flip()
 
     def score_board(self) -> None:
+        """
+            Display the scoreboard screen.
+        """
+
         pac_image = (pygame.image.load("resources/Pacman_HD.png")
                      .convert_alpha())
         pac_image = pygame.transform.scale(pac_image, (200, 200))
@@ -700,7 +798,7 @@ class Game:
                 cheat_mode: if True, the player will have special abilities.
         """
         if lev_no == 1:
-            maze = MazeGenerator(seed=42)
+            maze = MazeGenerator(seed=self.parser.json_dict["seed"])
         else:
             maze = MazeGenerator()
         grid = [[dec_to_bin(y, 4) for y in x] for x in maze.maze]
@@ -1065,7 +1163,7 @@ class Game:
 
 
 def main() -> None:
-    """Start the UI flow"""
+    """Start the game"""
     # try:
     game = Game()
     pygame.mixer.init()
