@@ -320,19 +320,23 @@ class Game:
                             speeds.append((-1, 0))
                         case _:
                             speeds.append((0, 0))
-                    continue
 
-                cell = grid[y_cell][x_cell]
-                open_paths = []
-                if cell[0] == "0":
-                    open_paths.append(Dir.LEFT)
-                if cell[1] == "0":
-                    open_paths.append(Dir.DOWN)
-                if cell[2] == "0":
-                    open_paths.append(Dir.RIGHT)
-                if cell[3] == "0":
-                    open_paths.append(Dir.UP)
-                if superpac:
+                # The running away behavior
+                elif (superpac and
+                        self.compute_dist(pac_pos, (x_cell, y_cell)) <= 4):
+
+                    # Determine all open directions for each ghost based
+                    # on its position.
+                    cell = grid[y_cell][x_cell]
+                    open_paths = []
+                    if cell[0] == "0":
+                        open_paths.append(Dir.LEFT)
+                    if cell[1] == "0":
+                        open_paths.append(Dir.DOWN)
+                    if cell[2] == "0":
+                        open_paths.append(Dir.RIGHT)
+                    if cell[3] == "0":
+                        open_paths.append(Dir.UP)
                     dirs = []
                     for dir in open_paths:
                         if dir == Dir.UP:
@@ -347,16 +351,31 @@ class Game:
                                     key=lambda m: self.compute_dist(m,
                                                                     pac_pos))
                     next_path = open_paths[dirs.index(next_cell)]
+                    # Determine the speed of each ghost based on its direction.
+                    if next_path == Dir.UP:
+                        speeds.append((0, -1))
+                    elif next_path == Dir.DOWN:
+                        speeds.append((0, 1))
+                    elif next_path == Dir.RIGHT:
+                        speeds.append((1, 0))
+                    elif next_path == Dir.LEFT:
+                        speeds.append((-1, 0))
+                # regular behavior
                 else:
-                    next_path = random.choice(open_paths)
-                if next_path == Dir.UP:
-                    speeds.append((0, -1))
-                elif next_path == Dir.DOWN:
-                    speeds.append((0, 1))
-                elif next_path == Dir.RIGHT:
-                    speeds.append((1, 0))
-                elif next_path == Dir.LEFT:
-                    speeds.append((-1, 0))
+                    rand_x = random.randint(0, 14)
+                    rand_y = random.randint(0, 14)
+                    path = self.bfs(grid, (x_cell, y_cell), (rand_x, rand_y))
+                    match "X" if not path else path[0]:
+                        case "N":
+                            speeds.append((0, -1))
+                        case "E":
+                            speeds.append((1, 0))
+                        case "S":
+                            speeds.append((0, 1))
+                        case "W":
+                            speeds.append((-1, 0))
+                        case _:
+                            speeds.append((0, 0))
             else:
                 speeds.append((0, 0))
         return speeds
