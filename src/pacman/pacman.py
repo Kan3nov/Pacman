@@ -24,7 +24,7 @@ def dec_to_bin(dec: int, digs: int) -> str:
     return res
 
 
-def collidePoint(rect: pygame.Rect, point: tuple) -> bool:
+def collidePoint(rect: pygame.Rect, point: tuple[int, int]) -> bool:
     if rect.right >= point[0] >= rect.left:
         if rect.bottom >= point[1] >= rect.top:
             return True
@@ -139,7 +139,8 @@ class Game:
             pygame.display.flip()
 
     def blit_logo(self, pac_image: pygame.Surface,
-                  resized_redG: pygame.Surface, resized_blueG: pygame.Surface):
+                  resized_redG: pygame.Surface,
+                  resized_blueG: pygame.Surface) -> None:
         pac_rect = pac_image.get_rect(topleft=(500, 50))
         title_1 = self.title_font.render("Pac", True, "yellow")
         title_2 = self.title_font.render("an", True, "yellow")
@@ -181,13 +182,13 @@ class Game:
         return acc
 
     def bfs(self, grid: list[list[str]], entry: tuple[int, int],
-            exit: tuple[int, int]) -> int:
-        dir_grid = []
+            exit: tuple[int, int]) -> str:
+        dir_grid: list[list[str]] = []
         for row in range(15):
             dir_grid.append([])
             for _ in range(15):
                 dir_grid[row].append(" ")
-        q = Queue()
+        q: Queue[tuple[int, int]] = Queue(0)
         visited = set()
         q.put(entry)
         while not q.empty():
@@ -200,8 +201,9 @@ class Game:
                     visited.add(n)
         return "exit not found"
 
-    def compute_dist(self, c1: tuple[int, int], c2: tuple[int, int]):
-        return ((c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2) ** 0.5
+    def compute_dist(self, c1: tuple[int, int],
+                     c2: tuple[int, int]) -> float:
+        return float(((c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2) ** 0.5)
 
     def ghost_dir(
             self,
@@ -371,7 +373,7 @@ class Game:
                     else:
                         self.screen.blit(pacgum_surf, pacgum_rect)
 
-    def gameover(self, win: bool):
+    def gameover(self, win: bool) -> None:
         """
             Display the gameover screen.
 
@@ -394,7 +396,7 @@ class Game:
         no_highlight = "gray"
         key_input = False
         clock = pygame.time.Clock()
-        error_font = pygame.sysfont.SysFont(None, 20)
+        error_font = pygame.font.SysFont(None, 20)
         error_msg = error_font.render("", True, "#EF4444")
 
         txt_box = pygame.Rect(800, 250, 280, 60)
@@ -446,18 +448,18 @@ class Game:
                                          .render("Usernames should " +
                                                  "contain at least one " +
                                                  "alphanumeric character",
-                                                 None, "#EF4444"))
+                                                 1, "#EF4444"))
                         else:
                             if self.parser.check_names(username):
                                 error_msg = (error_font
                                              .render("The name does exist",
-                                                     None, "#EF4444"))
+                                                     1, "#EF4444"))
                             else:
                                 self.parser.update_board([username,
                                                           self.score])
                                 error_msg = (error_font
                                              .render("Result Saved!",
-                                                     None, "white"))
+                                                     1, "white"))
                                 save_btn_is_clicked = True
                     else:
                         box_color = no_highlight
@@ -574,7 +576,7 @@ class Game:
                         time2 = pygame.time.get_ticks()
                         return time2 - time1
 
-    def controls(self):
+    def controls(self) -> None:
 
         frame = pygame.Rect(0, 0, 600, 400)
         frame.center = (self.x_size // 2, self.y_size // 2)
@@ -647,7 +649,7 @@ class Game:
             y_start += 45
         pygame.display.flip()
 
-    def score_board(self):
+    def score_board(self) -> None:
         pac_image = (pygame.image.load("resources/Pacman_HD.png")
                      .convert_alpha())
         pac_image = pygame.transform.scale(pac_image, (200, 200))
@@ -933,7 +935,8 @@ class Game:
                             self.parser.json_dict["lives"] -= 1
                             lives -= 1
                             for idx, rect in enumerate(ghost_rect):
-                                rect.topleft = ghost_res[idx]
+                                if rect is not None:
+                                    rect.topleft = ghost_res[idx]
                             speeds = [(0, 0), (0, 0), (0, 0), (0, 0)]
 
                             if self.parser.json_dict["lives"] <= 0:
@@ -998,7 +1001,7 @@ class Game:
             clock.tick(60)
             pygame.display.flip()
 
-    def level(self, anchor: tuple[int, int], grid: list[list]) -> None:
+    def level(self, anchor: tuple[int, int], grid: list[list[str]]) -> None:
         """
             Draw the maze represented in the grid.
 
@@ -1053,7 +1056,7 @@ class Game:
             y += 1
 
 
-def main():
+def main() -> None:
     """Start the UI flow"""
     # try:
     game = Game()

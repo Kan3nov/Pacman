@@ -1,5 +1,5 @@
-from src.pacman import pacman
+from src.pacman import main
 
 
 if __name__ == "__main__":
-    pacman.main()
+    main()

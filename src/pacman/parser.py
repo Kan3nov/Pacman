@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 
 class Jsonparser:
@@ -15,7 +16,7 @@ class Jsonparser:
             self.sorted_board = dict(sorted(score_dict.items(),
                                      key=lambda item: item[1], reverse=True))
 
-    def del_comment(self, json_str: str):
+    def del_comment(self, json_str: str) -> str:
         cleand_str = ""
         need = False
         lines_json = json_str.split("\n")
@@ -56,10 +57,10 @@ class Jsonparser:
                 return f'"{key}":{value},'
             return ""
 
-    def validate_config(self, s: str) -> str:
-        if s.strip()[0] != "{" or s.strip()[-1] != "}":
+    def validate_config(self, st: str) -> str:
+        if st.strip()[0] != "{" or st.strip()[-1] != "}":
             return "{}"
-        s = s.split(",")
+        s = st.split(",")
         cleaned_str = "{"
         for pair in s:
             if pair[0] == "{":
@@ -75,7 +76,7 @@ class Jsonparser:
         return cleaned_str
 
     @staticmethod
-    def defaults_filled(json_dict: dict):
+    def defaults_filled(json_dict: dict[str, Any]) -> None:
         defaults = {
             "highscore_filename": "score_board.json",
             "lives": 3,
@@ -114,13 +115,14 @@ class Jsonparser:
             self.save_data()
             return
 
-    def check_names(self, name: str):
+    def check_names(self, name: str) -> bool:
         try:
             if self.sorted_board[name]:
                 return True
+            return False
         except Exception:
             return False
 
-    def save_data(self):
+    def save_data(self) -> None:
         with open(self.score_boards_file, "w") as f:
             json.dump(self.sorted_board, f, indent=4)
