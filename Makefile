@@ -1,4 +1,8 @@
-SCRIPT = main.py
+SCRIPT = pac-man.py
+
+SHELL := /bin/bash
+
+SRC = *.py src/pacman/*.py
 
 all: env install run clean
 
@@ -19,11 +23,11 @@ debug:
 	@.env/bin/python -m pdb $(SCRIPT)
 
 lint:
-	@flake8 . && mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+	@flake8 $(SRC) && mypy $(SRC) --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
 lint-strict:
-	@flake8 . && mypy . --strict
+	@flake8 $(SRC) && mypy $(SRC) --strict
 
 env:
 	@python -m venv .env
-	
+

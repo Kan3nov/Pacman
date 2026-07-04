@@ -1183,12 +1183,12 @@ class Game:
 
 def main() -> None:
     """Start the game"""
-    # try:
-    game = Game()
-    pygame.mixer.init()
-    game.main_menu()
-    # except Exception as e:
-    # print("Error: ", e)
+    try:
+        game = Game()
+        pygame.mixer.init()
+        game.main_menu()
+    except Exception as e:
+        print("Error: ", e)
 
 
 if __name__ == "__main__":

@@ -143,9 +143,9 @@ class Jsonparser:
         for item in defaults.keys():
             try:
                 if item not in json_dict.keys():
-                    raise Exception(f"key {item} does not exist" +
+                    raise Exception(f"key {item} does not exist " +
                                     "or has invalid value, " +
-                                    "resorting to default value")
+                                    "resorting to default value\n")
             except Exception as e:
                 print(f"Error: {str(e)}")
                 json_dict[item] = defaults[item]
