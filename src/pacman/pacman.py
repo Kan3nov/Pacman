@@ -80,7 +80,7 @@ class Game:
         score
     """
 
-    def __init__(self) -> None:
+    def __init__(self, config_file: str) -> None:
         pygame.init()
         self.x_size = 1920
         self.y_size = 1080
@@ -92,7 +92,7 @@ class Game:
         self.smallfont = pygame.font.SysFont(None, 30)
         self.btnfont = pygame.font.SysFont(None, 60)
         self.title_font = pygame.font.SysFont(None, 200)
-        self.parser = Jsonparser("config.json")
+        self.parser = Jsonparser(config_file)
         self.score = 0
 
     def main_menu(self) -> None:
@@ -1181,10 +1181,14 @@ class Game:
             y += 1
 
 
-def main() -> None:
-    """Start the game"""
+def main(config_file: str) -> None:
+    """Start the game
+
+        Args:
+            config_file: the name of the file where all configurations are.
+    """
     try:
-        game = Game()
+        game = Game(config_file)
         pygame.mixer.init()
         game.main_menu()
     except Exception as e:
@@ -1192,4 +1196,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main("config.json")
